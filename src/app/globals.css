@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar-width: 240px;
+
+  /* K Moda y Estilo — Brand colors */
+  --brand-rose: #E91E63;
+  --brand-rose-light: #FCE4EC;
+  --brand-rose-dark: #C2185B;
+  --brand-gold: #D4AF37;
+  --brand-gold-light: #FFF8DC;
+  --brand-gold-dark: #B8960C;
+  --brand-black: #0F0F0F;
+  --brand-black-soft: #1A1A1A;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }

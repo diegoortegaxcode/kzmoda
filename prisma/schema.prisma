@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth & Roles ────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(ASISTENTE)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  orders         Order[]
+  stockMovements StockMovement[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  ASISTENTE
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────────────
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String   @unique
+  price       Decimal  @db.Decimal(10, 2)
+  costPrice   Decimal  @db.Decimal(10, 2) @map("cost_price")
+  stock       Int      @default(0)
+  minStock    Int      @default(5) @map("min_stock")
+  active      Boolean  @default(true)
+  images      String[] @default([])
+  categoryId  String   @map("category_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category       Category        @relation(fields: [categoryId], references: [id])
+  orderItems     OrderItem[]
+  stockMovements StockMovement[]
+
+  @@index([categoryId])
+  @@index([active])
+  @@index([stock])
+  @@map("products")
+}
+
+// ─── Stock movements ──────────────────────────────────────────────────────────
+
+model StockMovement {
+  id        String            @id @default(cuid())
+  productId String            @map("product_id")
+  userId    String            @map("user_id")
+  type      StockMovementType
+  qty       Int
+  notes     String?
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+enum StockMovementType {
+  ENTRADA
+  SALIDA
+  AJUSTE
+  DEVOLUCION
+}
+
+// ─── Customers ───────────────────────────────────────────────────────────────
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?  @unique
+  phone       String?
+  address     String?
+  dni         String?  @unique
+  ruc         String?  @unique
+  creditLimit Decimal  @default(0) @db.Decimal(10, 2) @map("credit_limit")
+  active      Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  orders Order[]
+  debts  Debt[]
+
+  @@index([active])
+  @@map("customers")
+}
+
+// ─── Orders (sin pasarela) ────────────────────────────────────────────────────
+
+model Order {
+  id          String      @id @default(cuid())
+  customerId  String      @map("customer_id")
+  userId      String      @map("user_id")
+  status      OrderStatus @default(PENDIENTE)
+  paymentType PaymentType @default(EFECTIVO) @map("payment_type")
+  subtotal    Decimal     @db.Decimal(10, 2)
+  discount    Decimal     @default(0) @db.Decimal(10, 2)
+  total       Decimal     @db.Decimal(10, 2)
+  paidAmount  Decimal     @default(0) @db.Decimal(10, 2) @map("paid_amount")
+  notes       String?
+  deliveredAt DateTime?   @map("delivered_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  customer Customer    @relation(fields: [customerId], references: [id])
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  debt     Debt?
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDIENTE
+  EN_PROCESO
+  EN_DESPACHO
+  COMPLETADO
+  CANCELADO
+}
+
+enum PaymentType {
+  EFECTIVO
+  TRANSFERENCIA
+  CREDITO
+  YAPE
+  PLIN
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String  @map("order_id")
+  productId String  @map("product_id")
+  qty       Int
+  unitPrice Decimal @db.Decimal(10, 2) @map("unit_price")
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ─── Debts ────────────────────────────────────────────────────────────────────
+
+model Debt {
+  id           String     @id @default(cuid())
+  customerId   String     @map("customer_id")
+  orderId      String?    @unique @map("order_id")
+  amount       Decimal    @db.Decimal(10, 2)
+  amountPaid   Decimal    @default(0) @db.Decimal(10, 2) @map("amount_paid")
+  dueDate      DateTime?  @map("due_date")
+  status       DebtStatus @default(PENDIENTE)
+  notes        String?
+  paidAt       DateTime?  @map("paid_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  order    Order?   @relation(fields: [orderId], references: [id])
+  payments DebtPayment[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("debts")
+}
+
+enum DebtStatus {
+  PENDIENTE
+  PARCIAL
+  PAGADO
+  VENCIDO
+  CONDONADO
+}
+
+model DebtPayment {
+  id          String      @id @default(cuid())
+  debtId      String      @map("debt_id")
+  amount      Decimal     @db.Decimal(10, 2)
+  paymentType PaymentType @map("payment_type")
+  reference   String?
+  paidAt      DateTime    @default(now()) @map("paid_at")
+
+  debt Debt @relation(fields: [debtId], references: [id], onDelete: Cascade)
+
+  @@index([debtId])
+  @@map("debt_payments")
+}

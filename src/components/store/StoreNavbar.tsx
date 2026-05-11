@@ -1,0 +1,133 @@
+"use client";
+
+import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingBag, Search, Menu, X } from "lucide-react";
+import { useCart } from "@/lib/cart-context";
+import { useState } from "react";
+import Link from "next/link";
+
+const links = ["Colección", "Novedades", "Ofertas", "Nosotros"];
+
+export default function StoreNavbar() {
+  const { count, toggle } = useCart();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <>
+      <motion.header
+        initial={{ y: -64, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="fixed top-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-b border-rose-100"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-black tracking-tight select-none"
+              style={{ background: "linear-gradient(135deg, var(--brand-rose), var(--brand-rose-dark))" }}
+            >
+              K
+            </div>
+            <span
+              className="text-sm font-bold hidden sm:block tracking-wide"
+              style={{ fontFamily: "var(--font-playfair)", color: "var(--brand-black)" }}
+            >
+              K Moda{" "}
+              <span style={{ color: "var(--brand-rose)" }}>&</span>{" "}
+              Estilo
+            </span>
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1 flex-1">
+            {links.map((link, i) => (
+              <motion.a
+                key={link}
+                href="#"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + i * 0.06 }}
+                className="px-3.5 py-1.5 text-sm font-medium text-slate-600 rounded-lg transition-colors hover:text-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)]"
+              >
+                {link}
+              </motion.a>
+            ))}
+          </nav>
+
+          <div className="flex-1 hidden md:block" />
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 text-slate-500 hover:text-[var(--brand-rose)] transition-colors"
+            >
+              <Search size={17} strokeWidth={2} />
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={toggle}
+              className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 text-slate-700 transition-colors"
+            >
+              <ShoppingBag size={18} strokeWidth={2} />
+              <AnimatePresence>
+                {count > 0 && (
+                  <motion.span
+                    key="badge"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none px-1"
+                    style={{ background: "var(--brand-rose)" }}
+                  >
+                    {count}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => setMenuOpen((v) => !v)}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 text-slate-600 transition-colors"
+            >
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="md:hidden overflow-hidden border-t border-rose-100"
+            >
+              <nav className="px-4 py-3 flex flex-col gap-1">
+                {links.map((link) => (
+                  <a
+                    key={link}
+                    href="#"
+                    className="px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-rose-50 hover:text-[var(--brand-rose)] rounded-xl transition-colors"
+                  >
+                    {link}
+                  </a>
+                ))}
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
+
+      <div className="h-16" />
+    </>
+  );
+}

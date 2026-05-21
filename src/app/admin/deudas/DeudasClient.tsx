@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Banknote } from "lucide-react";
+import { X, Banknote, Search } from "lucide-react";
 import DebtPanel from "@/components/DebtPanel";
 import type { DebtPanelRow } from "@/components/DebtPanel";
 import { registerPaymentAction, type DebtDetail, type ActionResult } from "./actions";
@@ -186,6 +186,11 @@ export default function DeudasClient({
   totalInMora: number;
 }) {
   const [paying, setPaying] = useState<DebtDetail | null>(null);
+  const [query, setQuery] = useState("");
+
+  const filteredRows = query.trim()
+    ? rows.filter((r) => r.customer.toLowerCase().includes(query.toLowerCase()))
+    : rows;
 
   function handlePagar(debt: DebtPanelRow) {
     const detail = rows.find((r) => r.id === debt.id);
@@ -202,6 +207,17 @@ export default function DeudasClient({
           </p>
         </div>
 
+        {/* Search */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por cliente…"
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+          />
+        </div>
+
         {/* Summary chips */}
         {totalInMora > 0 && (
           <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-rose-200 bg-rose-50">
@@ -212,7 +228,7 @@ export default function DeudasClient({
           </div>
         )}
 
-        <DebtPanel debts={rows} onPagar={handlePagar} />
+        <DebtPanel debts={filteredRows} onPagar={handlePagar} />
       </main>
 
       <AnimatePresence>

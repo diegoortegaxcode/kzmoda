@@ -53,7 +53,7 @@ export default function KPICard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: index * 0.09, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.45, delay: index * 0.09, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
       whileHover={{ y: -3, boxShadow: "0 12px 32px -8px rgba(0,0,0,0.1)" }}
       className={clsx(
         "bg-white rounded-2xl p-5 border border-slate-100 shadow-sm ring-1 cursor-default",

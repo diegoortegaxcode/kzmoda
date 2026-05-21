@@ -38,12 +38,19 @@ export async function GET() {
     import("jspdf-autotable"),
   ]);
 
-  // ── 1. Fetch products ─────────────────────────────────────────────────────
-  const products = await db.product.findMany({
-    where: { active: true },
-    include: { category: { select: { name: true } } },
-    orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
-  });
+  // ── 1. Fetch settings + products ─────────────────────────────────────────
+  const [settings, products] = await Promise.all([
+    db.storeSettings.upsert({
+      where: { id: "singleton" },
+      update: {},
+      create: { id: "singleton" },
+    }),
+      db.product.findMany({
+      where: { active: true },
+      include: { category: { select: { name: true } } },
+      orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
+    }),
+  ]);
 
   // ── 2. Load images in parallel (timeout 3s each) ──────────────────────────
   type ImgEntry = { data: string; format: string } | null;
@@ -76,13 +83,13 @@ export async function GET() {
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
-  doc.text("K MODA Y ESTILO", MARGIN, 17);
+  doc.text(settings.name.toUpperCase(), MARGIN, 17);
 
   // Tagline
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(255, 200, 220);
-  doc.text("Catálogo Oficial de Productos", MARGIN, 25);
+  doc.text(settings.catalogTagline || "Catálogo Oficial de Productos", MARGIN, 25);
 
   // Date + count (right-aligned)
   const dateStr = new Date().toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric" });
@@ -189,11 +196,11 @@ export async function GET() {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.text("K Moda y Estilo", MARGIN, H - 7);
+    doc.text(settings.name, MARGIN, H - 7);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(212, 175, 55);
-    doc.text("WhatsApp: 992 032 988", MARGIN, H - 3.5);
+    doc.text(`WhatsApp: ${settings.whatsapp}`, MARGIN, H - 3.5);
 
     // Page number
     doc.setTextColor(160, 160, 160);

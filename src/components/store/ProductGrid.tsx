@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ShoppingCart, Search, Filter } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { StoreProduct, StoreCategory } from "@/lib/mock-data";
+import Link from "next/link";
 
 interface ProductGridProps {
   products: StoreProduct[];
@@ -26,7 +27,7 @@ export default function ProductGrid({ products, categories }: ProductGridProps) 
   }, [products, selectedCategory, searchQuery]);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <section id="productos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Filters & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
@@ -84,28 +85,34 @@ export default function ProductGrid({ products, categories }: ProductGridProps) 
               className="group bg-white rounded-[2rem] overflow-hidden border border-gray-100 hover:shadow-2xl hover:shadow-indigo-100/50 transition-all duration-500"
             >
               <div className="aspect-square relative overflow-hidden bg-gray-50">
-                <img
-                  src={product.images[0] || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80"}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
+                <Link href={`/producto/${product.id}`} className="block h-full w-full">
+                  <img
+                    src={product.images[0] || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80"}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1 bg-white/80 backdrop-blur rounded-full text-[10px] font-bold uppercase tracking-wider text-gray-600 shadow-sm">
+                      {product.category}
+                    </span>
+                  </div>
+                </Link>
                 <button
                   onClick={() => add({ id: product.id, name: product.name, price: product.price, category: product.category, image: product.images[0] })}
-                  className="absolute bottom-4 right-4 w-12 h-12 bg-white/90 backdrop-blur shadow-lg rounded-2xl flex items-center justify-center text-indigo-600 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-indigo-600 hover:text-white"
+                  type="button"
+                  className="absolute bottom-4 right-4 z-10 w-12 h-12 bg-white/90 backdrop-blur shadow-lg rounded-2xl flex items-center justify-center text-indigo-600 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:bg-indigo-600 hover:text-white"
                 >
                   <Plus size={20} />
                 </button>
-                <div className="absolute top-4 left-4">
-                  <span className="px-3 py-1 bg-white/80 backdrop-blur rounded-full text-[10px] font-bold uppercase tracking-wider text-gray-600 shadow-sm">
-                    {product.category}
-                  </span>
-                </div>
               </div>
 
               <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">
-                  {product.name}
-                </h3>
+                <Link href={`/producto/${product.id}`} className="block">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors">
+                    {product.name}
+                  </h3>
+                </Link>
                 <p className="text-sm text-gray-500 mb-4 line-clamp-1">
                   {product.description}
                 </p>

@@ -1,0 +1,5 @@
+@prisma/client
+@prisma/engines
+core-js
+prisma
+sharp

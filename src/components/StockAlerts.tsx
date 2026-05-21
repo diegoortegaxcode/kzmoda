@@ -1,37 +1,28 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
+import Link from "next/link";
 
-interface StockItem {
+export interface LowStockItem {
   id: string;
   name: string;
   category: string;
   stock: number;
   minStock: number;
-  color: string;
 }
 
-const items: StockItem[] = [
-  { id: "1", name: "Zapatillas Runner Pro", category: "Calzado", stock: 3, minStock: 10, color: "bg-violet-500" },
-  { id: "2", name: "Polo Oversize Negro", category: "Ropa", stock: 1, minStock: 15, color: "bg-slate-700" },
-  { id: "3", name: "Bolso Cuero Marrón", category: "Accesorios", stock: 4, minStock: 8, color: "bg-amber-600" },
-  { id: "4", name: "Casaca Denim Azul", category: "Ropa", stock: 2, minStock: 12, color: "bg-sky-600" },
-  { id: "5", name: "Short Deportivo Gris", category: "Ropa", stock: 6, minStock: 20, color: "bg-slate-500" },
-];
-
-export default function StockAlerts() {
+export default function StockAlerts({ items = [] }: { items?: LowStockItem[] }) {
   const [dismissed, setDismissed] = useState<string[]>([]);
-
   const visible = items.filter((i) => !dismissed.includes(i.id));
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.45, delay: 0.35 }}
       className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
     >
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
@@ -44,48 +35,38 @@ export default function StockAlerts() {
             <p className="text-xs text-slate-400">{visible.length} productos críticos</p>
           </div>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
-        >
-          <Plus size={13} /> Reponer
-        </motion.button>
+        <Link href="/admin/inventario" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+          Ver inventario
+        </Link>
       </div>
 
       <div className="divide-y divide-slate-50">
         <AnimatePresence>
           {visible.map((item, i) => {
             const pct = Math.round((item.stock / item.minStock) * 100);
-            const critical = pct < 30;
-
+            const critical = item.stock === 0 || pct < 30;
             return (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                transition={{ duration: 0.25 }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
                 layout
               >
                 <motion.div
                   initial={{ x: 12 }}
                   animate={{ x: 0 }}
-                  transition={{ delay: 0.6 + i * 0.07, duration: 0.3 }}
+                  transition={{ delay: 0.4 + i * 0.06 }}
                   whileHover={{ backgroundColor: "#FAFAFA" }}
                   className="px-5 py-3.5 cursor-default"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={clsx("w-2 h-2 rounded-full shrink-0", item.color)} />
+                    <div className={clsx("w-2 h-2 rounded-full shrink-0", critical ? "bg-rose-400" : "bg-amber-400")} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-xs font-medium text-slate-800 truncate">{item.name}</p>
-                        <span
-                          className={clsx(
-                            "text-[10px] font-bold ml-2 shrink-0",
-                            critical ? "text-rose-600" : "text-amber-600"
-                          )}
-                        >
+                        <span className={clsx("text-[10px] font-bold ml-2 shrink-0", critical ? "text-rose-600" : "text-amber-600")}>
                           {item.stock} uds
                         </span>
                       </div>
@@ -93,17 +74,20 @@ export default function StockAlerts() {
                         <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${pct}%` }}
-                            transition={{ delay: 0.7 + i * 0.07, duration: 0.5, ease: "easeOut" }}
-                            className={clsx(
-                              "h-full rounded-full",
-                              critical ? "bg-rose-400" : "bg-amber-400"
-                            )}
+                            animate={{ width: `${Math.min(pct, 100)}%` }}
+                            transition={{ delay: 0.5 + i * 0.06, duration: 0.5 }}
+                            className={clsx("h-full rounded-full", critical ? "bg-rose-400" : "bg-amber-400")}
                           />
                         </div>
                         <span className="text-[10px] text-slate-400 shrink-0">min {item.minStock}</span>
                       </div>
                     </div>
+                    <button
+                      onClick={() => setDismissed((p) => [...p, item.id])}
+                      className="text-[10px] text-slate-300 hover:text-slate-400 transition-colors shrink-0"
+                    >
+                      ✕
+                    </button>
                   </div>
                 </motion.div>
               </motion.div>
@@ -113,11 +97,7 @@ export default function StockAlerts() {
       </div>
 
       {visible.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="py-8 text-center text-xs text-slate-400"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8 text-center text-xs text-slate-400">
           ✓ Todo el stock en niveles óptimos
         </motion.div>
       )}

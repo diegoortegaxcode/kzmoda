@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, UserPlus, Mail, Phone, CreditCard, X, Users, ShieldCheck, ShieldOff } from "lucide-react";
+import { Plus, UserPlus, Mail, Phone, CreditCard, X, Users, ShieldCheck, ShieldOff, Search } from "lucide-react";
 import { createCustomerAction, toggleCustomerAction, type CustomerRow, type ActionResult } from "./actions";
 
 function CustomerModal({ onClose }: { onClose: () => void }) {
@@ -110,9 +110,16 @@ function CustomerModal({ onClose }: { onClose: () => void }) {
 
 export default function ClientesClient({ customers }: { customers: CustomerRow[] }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [query, setQuery] = useState("");
   const [, startTransition] = useTransition();
 
   const active = customers.filter((c) => c.active).length;
+  const filtered = query.trim()
+    ? customers.filter((c) =>
+        [c.name, c.email ?? "", c.phone ?? "", c.dni ?? ""]
+          .some((v) => v.toLowerCase().includes(query.toLowerCase()))
+      )
+    : customers;
 
   function handleToggle(id: string) {
     startTransition(() => toggleCustomerAction(id));
@@ -137,6 +144,17 @@ export default function ClientesClient({ customers }: { customers: CustomerRow[]
             <Plus size={16} strokeWidth={2.5} />
             Nuevo Cliente
           </motion.button>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por nombre, email, teléfono o DNI…"
+            className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+          />
         </div>
 
         {/* Stats */}
@@ -170,14 +188,14 @@ export default function ClientesClient({ customers }: { customers: CustomerRow[]
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {customers.length === 0 && (
+                {filtered.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-4 py-16 text-center text-sm text-slate-400">
-                      Sin clientes registrados. Añade el primero.
+                      {query ? "Sin resultados para esa búsqueda." : "Sin clientes registrados. Añade el primero."}
                     </td>
                   </tr>
                 )}
-                {customers.map((c, i) => (
+                {filtered.map((c, i) => (
                   <motion.tr
                     key={c.id}
                     initial={{ opacity: 0 }}

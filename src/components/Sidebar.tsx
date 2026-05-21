@@ -2,12 +2,14 @@
 
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard, Package, Warehouse, Users, CreditCard,
-  FileText, Settings, ChevronRight, UserCog,
+  LayoutDashboard, Warehouse, Users, CreditCard,
+  Settings, ChevronRight, FileCheck, ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
+import logo from "@/img/logo.jpeg";
 
 interface NavItem {
   href: string;
@@ -19,13 +21,12 @@ interface NavItem {
 }
 
 const nav: NavItem[] = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/admin/productos", icon: Package, label: "Productos", badge: 12 },
-  { href: "/admin/inventario", icon: Warehouse, label: "Inventario" },
-  { href: "/admin/clientes", icon: Users, label: "Clientes", badge: 3 },
-  { href: "/admin/deudas", icon: CreditCard, label: "Deudas", badge: 7, badgeColor: "rose" },
-  { href: "/admin/catalogo", icon: FileText, label: "Catálogo PDF" },
-  { href: "/admin/asistentes", icon: UserCog, label: "Asistentes", adminOnly: true },
+  { href: "/admin",              icon: LayoutDashboard, label: "Dashboard"     },
+  { href: "/admin/inventario",   icon: Warehouse,       label: "Inventario"    },
+  { href: "/admin/clientes",     icon: Users,           label: "Clientes"      },
+  { href: "/admin/pedidos",      icon: ShoppingBag,     label: "Pedidos"       },
+  { href: "/admin/deudas",       icon: CreditCard,      label: "Deudas",       badgeColor: "rose" },
+  { href: "/admin/comprobantes", icon: FileCheck,       label: "Comprobantes", badgeColor: "rose" },
 ];
 
 const container = {
@@ -35,7 +36,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, x: -16 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } },
 };
 
 interface SidebarProps {
@@ -57,18 +58,19 @@ export default function Sidebar({ role }: SidebarProps) {
     <motion.aside
       initial={{ x: -20, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
       className="w-60 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 z-20"
     >
       {/* Logo */}
       <div className="px-5 py-5 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-black"
-            style={{ background: "linear-gradient(135deg, var(--brand-rose), var(--brand-rose-dark))" }}
-          >
-            K
-          </div>
+          <Image
+            src={logo}
+            alt="K Moda y Estilo"
+            width={32}
+            height={32}
+            className="rounded-xl object-cover"
+          />
           <div>
             <p
               className="text-sm font-bold leading-none"

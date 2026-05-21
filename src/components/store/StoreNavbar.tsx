@@ -1,14 +1,22 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Search, Menu, X } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, User } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import logo from "@/img/logo.jpeg";
 
-const links = ["Colección", "Novedades", "Ofertas", "Nosotros"];
+const links = [
+  { label: "Colección", href: "#productos" },
+  { label: "Novedades", href: "#novedades" },
+  { label: "Ofertas", href: "#ofertas" },
+];
 
-export default function StoreNavbar() {
+interface CustomerInfo { name: string; initials: string }
+
+export default function StoreNavbar({ customer }: { customer?: CustomerInfo | null }) {
   const { count, toggle } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -17,24 +25,25 @@ export default function StoreNavbar() {
       <motion.header
         initial={{ y: -64, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         className="fixed top-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-b border-rose-100"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-6">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-black tracking-tight select-none"
-              style={{ background: "linear-gradient(135deg, var(--brand-rose), var(--brand-rose-dark))" }}
-            >
-              K
-            </div>
+            <Image
+              src={logo}
+              alt="KZ Moda y Estilo"
+              width={40}
+              height={40}
+              className="rounded-xl object-cover"
+            />
             <span
               className="text-sm font-bold hidden sm:block tracking-wide"
               style={{ fontFamily: "var(--font-playfair)", color: "var(--brand-black)" }}
             >
-              K Moda{" "}
-              <span style={{ color: "var(--brand-rose)" }}>&</span>{" "}
+              KZ Moda{" "}
+              <span style={{ color: "var(--brand-rose)" }}>y</span>{" "}
               Estilo
             </span>
           </Link>
@@ -43,14 +52,14 @@ export default function StoreNavbar() {
           <nav className="hidden md:flex items-center gap-1 flex-1">
             {links.map((link, i) => (
               <motion.a
-                key={link}
-                href="#"
+                key={link.label}
+                href={link.href}
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + i * 0.06 }}
                 className="px-3.5 py-1.5 text-sm font-medium text-slate-600 rounded-lg transition-colors hover:text-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)]"
               >
-                {link}
+                {link.label}
               </motion.a>
             ))}
           </nav>
@@ -66,6 +75,31 @@ export default function StoreNavbar() {
             >
               <Search size={17} strokeWidth={2} />
             </motion.button>
+
+            {customer ? (
+              <Link href="/cuenta/pedidos">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-9 h-9 flex items-center justify-center rounded-full text-white text-[11px] font-bold"
+                  style={{ background: "var(--brand-rose)" }}
+                  title={customer.name}
+                >
+                  {customer.initials}
+                </motion.div>
+              </Link>
+            ) : (
+              <Link href="/cuenta/login">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 text-slate-500 hover:text-[var(--brand-rose)] transition-colors"
+                  title="Mi cuenta"
+                >
+                  <User size={17} strokeWidth={2} />
+                </motion.div>
+              </Link>
+            )}
 
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -114,11 +148,11 @@ export default function StoreNavbar() {
               <nav className="px-4 py-3 flex flex-col gap-1">
                 {links.map((link) => (
                   <a
-                    key={link}
-                    href="#"
+                    key={link.label}
+                    href={link.href}
                     className="px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-rose-50 hover:text-[var(--brand-rose)] rounded-xl transition-colors"
                   >
-                    {link}
+                    {link.label}
                   </a>
                 ))}
               </nav>

@@ -9,14 +9,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const token = store.get("kmoda_session")?.value;
   const session = token ? await verifyJWT(token) : null;
 
-  // Belt-and-suspenders: middleware should redirect first, but just in case
-  if (!session) redirect("/login");
+  if (!session || session.role === "CLIENTE") redirect("/login");
+
+  const role = session.role as "ADMIN" | "ASISTENTE";
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar role={session.role} />
+      <Sidebar role={role} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar userName={session.name} userRole={session.role} />
+        <TopBar userName={session.name} userRole={role} />
         {children}
       </div>
     </div>

@@ -12,7 +12,7 @@ const badges = [
 const fade = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] },
+  transition: { duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
 });
 
 export default function Hero() {
@@ -119,14 +119,14 @@ export default function Hero() {
             <motion.div
               initial={{ opacity: 0, rotate: -6, scale: 0.9 }}
               animate={{ opacity: 1, rotate: -4, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ delay: 0.5, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
               className="absolute top-6 right-8 w-52 h-64 rounded-3xl"
               style={{ background: "linear-gradient(135deg, var(--brand-rose-light), #FFDDE8)" }}
             />
             <motion.div
               initial={{ opacity: 0, rotate: 6, scale: 0.9 }}
               animate={{ opacity: 1, rotate: 3, scale: 1 }}
-              transition={{ delay: 0.55, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ delay: 0.55, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
               className="absolute bottom-4 left-8 w-48 h-60 rounded-3xl"
               style={{ background: "linear-gradient(135deg, var(--brand-gold-light), #FFF0A0)" }}
             />
@@ -135,7 +135,7 @@ export default function Hero() {
             <motion.div
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+              transition={{ delay: 0.4, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
               whileHover={{ y: -6 }}
               className="relative z-10 w-64 bg-white rounded-3xl shadow-xl overflow-hidden border cursor-pointer"
               style={{

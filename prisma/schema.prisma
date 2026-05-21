@@ -21,6 +21,8 @@ model User {
 
   orders         Order[]
   stockMovements StockMovement[]
+  reviewedProofs PaymentProof[]  @relation("ProofReviewer")
+  notificationReads NotificationRead[]
 
   @@map("users")
 }
@@ -98,21 +100,23 @@ enum StockMovementType {
 // ─── Customers ───────────────────────────────────────────────────────────────
 
 model Customer {
-  id          String   @id @default(cuid())
-  name        String
-  email       String?  @unique
-  phone       String?
-  address     String?
-  dni         String?  @unique
-  ruc         String?  @unique
-  creditLimit Decimal  @default(0) @db.Decimal(10, 2) @map("credit_limit")
-  active      Boolean  @default(true)
-  notes       String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(cuid())
+  name         String
+  email        String?  @unique
+  phone        String?
+  address      String?
+  dni          String?  @unique
+  ruc          String?  @unique
+  passwordHash String?  @map("password_hash")
+  creditLimit  Decimal  @default(0) @db.Decimal(10, 2) @map("credit_limit")
+  active       Boolean  @default(true)
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  orders Order[]
-  debts  Debt[]
+  orders        Order[]
+  debts         Debt[]
+  paymentProofs PaymentProof[]
 
   @@index([active])
   @@map("customers")
@@ -192,9 +196,10 @@ model Debt {
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
 
-  customer Customer @relation(fields: [customerId], references: [id])
-  order    Order?   @relation(fields: [orderId], references: [id])
-  payments DebtPayment[]
+  customer      Customer       @relation(fields: [customerId], references: [id])
+  order         Order?         @relation(fields: [orderId], references: [id])
+  payments      DebtPayment[]
+  paymentProofs PaymentProof[]
 
   @@index([customerId])
   @@index([status])
@@ -222,4 +227,63 @@ model DebtPayment {
 
   @@index([debtId])
   @@map("debt_payments")
+}
+
+// ─── Payment Proofs (comprobantes del cliente) ────────────────────────────────
+
+model PaymentProof {
+  id         String      @id @default(cuid())
+  debtId     String      @map("debt_id")
+  customerId String      @map("customer_id")
+  imageUrl   String      @map("image_url")
+  amount     Decimal     @db.Decimal(10, 2)
+  paymentType PaymentType @default(TRANSFERENCIA) @map("payment_type")
+  status     ProofStatus @default(PENDIENTE)
+  notes      String?
+  reviewedAt DateTime?   @map("reviewed_at")
+  reviewedBy String?     @map("reviewed_by")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  debt     Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id])
+  reviewer User?    @relation("ProofReviewer", fields: [reviewedBy], references: [id])
+
+  @@index([debtId])
+  @@index([customerId])
+  @@index([status])
+  @@map("payment_proofs")
+}
+
+enum ProofStatus {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+// ─── Store Settings (singleton row) ──────────────────────────────────────────
+
+model StoreSettings {
+  id             String   @id @default("singleton")
+  name           String   @default("K Moda y Estilo")
+  whatsapp       String   @default("992 032 988")
+  address        String   @default("")
+  instagram      String   @default("")
+  catalogTagline String   @default("Catálogo Oficial de Productos") @map("catalog_tagline")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("store_settings")
+}
+
+model NotificationRead {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  notificationId String   @map("notification_id")
+  readAt         DateTime @default(now()) @map("read_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationId])
+  @@index([userId])
+  @@index([readAt])
+  @@map("notification_reads")
 }

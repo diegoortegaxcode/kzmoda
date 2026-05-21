@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { CreditCard, ArrowUpRight, Clock } from "lucide-react";
 import clsx from "clsx";
+import Link from "next/link";
 
 export interface DebtPanelRow {
   id: string;
@@ -69,9 +70,9 @@ export default function DebtPanel({ debts = MOCK, onPagar }: DebtPanelProps) {
             </p>
           </div>
         </div>
-        <motion.button whileHover={{ scale: 1.03 }} className="flex items-center gap-1 text-xs font-medium text-indigo-600">
+        <Link href="/admin/deudas" className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700">
           Ver reporte <ArrowUpRight size={13} />
-        </motion.button>
+        </Link>
       </div>
 
       {/* Summary bar */}

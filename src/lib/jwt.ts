@@ -6,7 +6,7 @@ export interface SessionPayload {
   sub: string;
   email: string;
   name: string;
-  role: "ADMIN" | "ASISTENTE";
+  role: "ADMIN" | "ASISTENTE" | "CLIENTE";
   iat: number;
   exp: number;
 }

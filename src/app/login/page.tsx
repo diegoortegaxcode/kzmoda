@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { useState } from "react";
@@ -8,13 +9,17 @@ import Image from "next/image";
 import logo from "@/img/logo.jpeg";
 import { loginAction, type LoginResult } from "./actions";
 
-export default function LoginPage() {
-  const [state, formAction, pending] = useActionState<LoginResult, FormData>(loginAction, null);
-  const [showPwd, setShowPwd] = useState(false);
+const errorMessages: Record<string, string> = {
+  campos: "Completa todos los campos.",
+  credenciales: "Credenciales inválidas.",
+};
 
-  useEffect(() => {
-    if (state && "ok" in state) window.location.href = "/admin";
-  }, [state]);
+export default function LoginPage() {
+  const [, formAction, pending] = useActionState<LoginResult, FormData>(loginAction, null);
+  const [showPwd, setShowPwd] = useState(false);
+  const searchParams = useSearchParams();
+  const errorKey = searchParams.get("error");
+  const errorMsg = errorKey ? (errorMessages[errorKey] ?? "Error al iniciar sesión.") : null;
 
   return (
     <div
@@ -88,11 +93,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 placeholder="admin@kmoda.com"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
-                style={{
-                  background: "#FFF5F8",
-                  border: "1px solid #F8BBD9",
-                  color: "#3D0020",
-                }}
+                style={{ background: "#FFF5F8", border: "1px solid #F8BBD9", color: "#3D0020" }}
                 onFocus={(e) => {
                   e.currentTarget.style.borderColor = "#E91E63";
                   e.currentTarget.style.boxShadow = "0 0 0 3px rgba(233,30,99,0.1)";
@@ -139,14 +140,14 @@ export default function LoginPage() {
             </div>
 
             {/* Error */}
-            {state && "error" in state && state.error && (
+            {errorMsg && (
               <motion.p
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-xs px-3 py-2 rounded-lg"
                 style={{ background: "rgba(233,30,99,0.08)", color: "#C2185B" }}
               >
-                {state.error}
+                {errorMsg}
               </motion.p>
             )}
 

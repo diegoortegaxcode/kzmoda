@@ -6,21 +6,18 @@ import { signJWT } from "@/lib/jwt";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export type LoginResult = { error: string } | { ok: true } | null;
+export type LoginResult = { error: string } | null;
 
 export async function loginAction(_prev: LoginResult, formData: FormData): Promise<LoginResult> {
   const email = ((formData.get("email") as string) ?? "").trim().toLowerCase();
   const password = (formData.get("password") as string) ?? "";
 
-  if (!email || !password) return { error: "Completa todos los campos." };
+  if (!email || !password) redirect("/login?error=campos");
 
   const user = await db.user.findUnique({ where: { email } });
-
   const valid = user ? await verifyPassword(password, user.passwordHash) : false;
 
-  if (!user || !user.active || !valid) {
-    return { error: "Credenciales inválidas." };
-  }
+  if (!user || !user.active || !valid) redirect("/login?error=credenciales");
 
   const token = await signJWT({
     sub: user.id,
@@ -38,7 +35,7 @@ export async function loginAction(_prev: LoginResult, formData: FormData): Promi
     path: "/",
   });
 
-  return { ok: true };
+  redirect("/admin");
 }
 
 export async function logoutAction(): Promise<void> {

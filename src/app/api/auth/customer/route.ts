@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
 import { signJWT } from "@/lib/jwt";
+import { shouldUseSecureCookie } from "@/lib/auth-cookie";
 
 export async function POST(req: NextRequest) {
   const body = await req.formData();
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.redirect(new URL("/cuenta/pedidos", req.url));
   res.cookies.set("kmoda_customer", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(req.url),
     sameSite: "lax",
     maxAge: 28800,
     path: "/",

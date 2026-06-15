@@ -3,7 +3,9 @@
 import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
 import { signJWT } from "@/lib/jwt";
+import { shouldUseSecureCookie } from "@/lib/auth-cookie";
 import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export type LoginResult = { error: string } | null;
@@ -27,9 +29,12 @@ export async function loginAction(_prev: LoginResult, formData: FormData): Promi
   });
 
   const store = await cookies();
+  const hdrs = await headers();
+  const proto = hdrs.get("x-forwarded-proto") ?? "http";
+  const host = hdrs.get("host") ?? "localhost";
   store.set("kmoda_session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(`${proto}://${host}`),
     sameSite: "lax",
     maxAge: 28800,
     path: "/",

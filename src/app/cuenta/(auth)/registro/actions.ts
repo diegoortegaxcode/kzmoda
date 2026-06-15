@@ -3,7 +3,9 @@
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import { signJWT } from "@/lib/jwt";
+import { shouldUseSecureCookie } from "@/lib/auth-cookie";
 import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export type RegisterResult = { error: string } | null;
@@ -45,9 +47,12 @@ export async function customerRegisterAction(_prev: RegisterResult, formData: Fo
     const token = await signJWT({ sub: customerId, email, name: customerName, role: "CLIENTE" });
 
     const store = await cookies();
+    const hdrs = await headers();
+    const proto = hdrs.get("x-forwarded-proto") ?? "http";
+    const host = hdrs.get("host") ?? "localhost";
     store.set("kmoda_customer", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: shouldUseSecureCookie(`${proto}://${host}`),
       sameSite: "lax",
       maxAge: 28800,
       path: "/",

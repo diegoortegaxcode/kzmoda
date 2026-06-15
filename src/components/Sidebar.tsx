@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, Warehouse, Users, CreditCard,
-  Settings, ChevronRight, FileCheck, ShoppingBag,
+  Settings, ChevronRight, FileCheck, ShoppingBag, ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,6 +27,7 @@ const nav: NavItem[] = [
   { href: "/admin/pedidos",      icon: ShoppingBag,     label: "Pedidos"       },
   { href: "/admin/deudas",       icon: CreditCard,      label: "Deudas",       badgeColor: "rose" },
   { href: "/admin/comprobantes", icon: FileCheck,       label: "Comprobantes", badgeColor: "rose" },
+  { href: "/admin/banners",      icon: ImageIcon,       label: "Banners" },
 ];
 
 const container = {

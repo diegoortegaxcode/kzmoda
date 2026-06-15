@@ -9,9 +9,11 @@ import {
 } from "lucide-react";
 import {
   createProductAction, adjustStockAction, createCategoryAction, toggleCategoryAction, updateProductAction,
+  getNextSkuSuggestion,
   type ProductRow, type CategoryOption, type CategoryRow, type ActionResult,
 } from "./actions";
 import RichTextEditor from "./RichTextEditor";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -74,16 +76,26 @@ function Field({
 
 // ─── Add Product Modal ────────────────────────────────────────────────────────
 
-function ProductModal({ categories, onClose }: { categories: CategoryOption[]; onClose: () => void }) {
+function ProductModal({ categories, skuPrefixes, onClose }: { categories: CategoryOption[]; skuPrefixes: string[]; onClose: () => void }) {
   const [state, formAction, pending] = useActionState<ActionResult, FormData>(createProductAction, null);
   const [imageMode, setImageMode] = useState<"file" | "url">("file");
   const [preview, setPreview] = useState("");
   const [description, setDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [skuValue, setSkuValue] = useState("");
+  const [skuLoading, setSkuLoading] = useState(false);
 
   useEffect(() => {
     if (state?.success) onClose();
   }, [state?.success, onClose]);
+
+  async function handlePrefixSelect(prefix: string) {
+    if (!prefix) { setSkuValue(""); return; }
+    setSkuLoading(true);
+    const suggestion = await getNextSkuSuggestion(prefix);
+    setSkuValue(suggestion);
+    setSkuLoading(false);
+  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -215,7 +227,36 @@ function ProductModal({ categories, onClose }: { categories: CategoryOption[]; o
             <div className="col-span-2">
               <Field label="Nombre" name="name" required placeholder="Ej. Vestido Floral Rosa" />
             </div>
-            <Field label="SKU" name="sku" required placeholder="VFR-001" />
+            {skuPrefixes.length > 0 ? (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  SKU <span className="text-rose-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    onChange={(e) => handlePrefixSelect(e.target.value)}
+                    className="w-28 shrink-0 px-2 py-2 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition bg-white"
+                  >
+                    <option value="">Prefijo</option>
+                    {skuPrefixes.map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <div className="relative flex-1">
+                    <input
+                      name="sku"
+                      required
+                      value={skuValue}
+                      onChange={(e) => setSkuValue(e.target.value)}
+                      placeholder="SKU-001"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-900 font-mono placeholder-slate-300 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
+                    />
+                    {skuLoading && <Loader2 size={13} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-400" />}
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 px-1">Selecciona un prefijo para auto-generar o escríbelo tú mismo</p>
+              </div>
+            ) : (
+              <Field label="SKU" name="sku" required placeholder="VFR-001" />
+            )}
             <Field label="Categoría" name="categoryId" required>
               {categories.length === 0 ? (
                 <p className="text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
@@ -766,18 +807,39 @@ export default function InventarioClient({
   products,
   categories,
   allCategories,
+  skuPrefixes,
 }: {
   products: ProductRow[];
   categories: CategoryOption[];
   allCategories: CategoryRow[];
+  skuPrefixes: string[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [showAdd, setShowAdd] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [adjusting, setAdjusting] = useState<ProductRow | null>(null);
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [downloading, setDownloading] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+  const [stockFilter, setStockFilter] = useState<"ALL" | "OUT" | "LOW" | "OK">(
+    ((searchParams.get("stock") as "ALL" | "OUT" | "LOW" | "OK") ?? "ALL")
+  );
   const searchDebounced = useDebounce(search, 280);
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    const q = searchDebounced.trim();
+    if (q) params.set("q", q);
+    else params.delete("q");
+
+    if (stockFilter !== "ALL") params.set("stock", stockFilter);
+    else params.delete("stock");
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [searchDebounced, stockFilter, pathname, router, searchParams]);
 
   async function handleDownloadPDF() {
     setDownloading(true);
@@ -804,12 +866,20 @@ export default function InventarioClient({
   const inventoryValue = products.reduce((s, p) => s + p.stock * p.costPrice, 0);
   const filteredProducts = products.filter((p) => {
     const q = searchDebounced.trim().toLowerCase();
-    if (!q) return true;
-    return (
+    const searchOk = !q || (
       p.name.toLowerCase().includes(q) ||
       p.sku.toLowerCase().includes(q) ||
       p.category.toLowerCase().includes(q)
     );
+    const stockOk =
+      stockFilter === "ALL"
+        ? true
+        : stockFilter === "OUT"
+          ? p.stock === 0
+          : stockFilter === "LOW"
+            ? p.stock > 0 && p.stock <= p.minStock
+            : p.stock > p.minStock;
+    return searchOk && stockOk;
   });
 
   return (
@@ -887,15 +957,38 @@ export default function InventarioClient({
         {/* Table */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-100">
-            <div className="relative max-w-md">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por nombre, SKU o categoría…"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
-              />
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="relative max-w-md w-full">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por nombre, SKU o categoría…"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: "ALL", label: "Todos" },
+                  { value: "OUT", label: "Sin stock" },
+                  { value: "LOW", label: "Stock bajo" },
+                  { value: "OK", label: "En stock" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setStockFilter(opt.value as typeof stockFilter)}
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+                      stockFilter === opt.value
+                        ? "border-[var(--brand-rose)] text-[var(--brand-rose)] bg-[var(--brand-rose-light)]"
+                        : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -1027,6 +1120,7 @@ export default function InventarioClient({
           <ProductModal
             key="product-modal"
             categories={categories}
+            skuPrefixes={skuPrefixes}
             onClose={() => setShowAdd(false)}
           />
         )}

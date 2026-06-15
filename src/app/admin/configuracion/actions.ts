@@ -29,6 +29,27 @@ export async function fetchSettings() {
   return getOrCreateSettings();
 }
 
+export async function addSkuPrefixAction(prefix: string): Promise<ActionResult> {
+  const adminId = await requireAdmin();
+  if (!adminId) return { error: "Sin autorización." };
+  const clean = prefix.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!clean || clean.length < 2 || clean.length > 6) return { error: "Prefijo inválido (2-6 letras/números)." };
+  const settings = await getOrCreateSettings();
+  if (settings.skuPrefixes.includes(clean)) return { error: "El prefijo ya existe." };
+  await db.storeSettings.update({ where: { id: "singleton" }, data: { skuPrefixes: [...settings.skuPrefixes, clean] } });
+  revalidatePath("/admin/configuracion");
+  return { success: true };
+}
+
+export async function removeSkuPrefixAction(prefix: string): Promise<ActionResult> {
+  const adminId = await requireAdmin();
+  if (!adminId) return { error: "Sin autorización." };
+  const settings = await getOrCreateSettings();
+  await db.storeSettings.update({ where: { id: "singleton" }, data: { skuPrefixes: settings.skuPrefixes.filter((p) => p !== prefix) } });
+  revalidatePath("/admin/configuracion");
+  return { success: true };
+}
+
 export async function updateStoreAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const adminId = await requireAdmin();
   if (!adminId) return { error: "Sin autorización." };

@@ -269,9 +269,24 @@ model StoreSettings {
   address        String   @default("")
   instagram      String   @default("")
   catalogTagline String   @default("Catálogo Oficial de Productos") @map("catalog_tagline")
+  skuPrefixes    String[] @default([]) @map("sku_prefixes")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
   @@map("store_settings")
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  imageUrl  String   @map("image_url")
+  title     String?
+  subtitle  String?
+  link      String?
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("banners")
 }
 
 model NotificationRead {

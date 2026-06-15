@@ -10,16 +10,33 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+
 export const metadata: Metadata = {
-  title: "K Moda y Estilo — Moda con elegancia",
+  metadataBase: new URL(base),
+  title: {
+    default: "K Moda y Estilo — Moda femenina con elegancia",
+    template: "%s — K Moda y Estilo",
+  },
   description: "Descubre la colección exclusiva de K Moda y Estilo. Moda femenina con calidad garantizada y entrega rápida.",
-  keywords: ["moda", "ropa", "estilo", "moda femenina", "K Moda"],
+  keywords: ["moda", "ropa", "estilo", "moda femenina", "K Moda", "vestidos", "blusas", "Lima", "Perú"],
+  authors: [{ name: "K Moda y Estilo" }],
+  creator: "K Moda y Estilo",
   openGraph: {
-    title: "K Moda y Estilo",
-    description: "Moda femenina con elegancia y calidad garantizada.",
+    title: "K Moda y Estilo — Moda femenina con elegancia",
+    description: "Descubre la colección exclusiva de K Moda y Estilo. Moda femenina con calidad garantizada y entrega rápida.",
+    url: base,
+    siteName: "K Moda y Estilo",
     locale: "es_PE",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "K Moda y Estilo",
+    description: "Moda femenina con elegancia y calidad garantizada.",
+  },
+  alternates: { canonical: base },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

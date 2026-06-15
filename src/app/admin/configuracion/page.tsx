@@ -13,6 +13,7 @@ export default async function ConfiguracionPage() {
         address:        settings.address,
         instagram:      settings.instagram,
         catalogTagline: settings.catalogTagline,
+        skuPrefixes:    settings.skuPrefixes,
       }}
     />
   );

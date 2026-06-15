@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 import { db } from "@/lib/db";
@@ -14,8 +16,38 @@ interface ProductDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+
+  const product = await db.product.findUnique({
+    where: { id, active: true },
+    select: { name: true, description: true, price: true, images: true, category: { select: { name: true } } },
+  });
+
+  if (!product) return { title: "Producto no encontrado — K Moda y Estilo" };
+
+  const plainDesc = toPlainDescription(product.description) || `${product.name} en K Moda y Estilo. Moda femenina con calidad garantizada.`;
+  const image = product.images[0] ?? null;
+
+  return {
+    title: `${product.name} — K Moda y Estilo`,
+    description: plainDesc.slice(0, 160),
+    alternates: { canonical: `${base}/producto/${id}` },
+    openGraph: {
+      title: `${product.name} — K Moda y Estilo`,
+      description: plainDesc.slice(0, 160),
+      url: `${base}/producto/${id}`,
+      type: "website",
+      locale: "es_PE",
+      ...(image ? { images: [{ url: image, alt: product.name }] } : {}),
+    },
+  };
+}
+
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { id } = await params;
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
 
   const product = await db.product.findUnique({
     where: { id, active: true },
@@ -52,9 +84,35 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   const safeDescription = normalizeDescriptionForRender(product.description ?? "");
   const hasRichDescription = safeDescription.length > 0;
+  const plainDesc = toPlainDescription(product.description) || `${product.name} en K Moda y Estilo.`;
+  const heroImage = product.images[0] || "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=80";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: plainDesc.slice(0, 500),
+    image: product.images.length > 0 ? product.images : [heroImage],
+    sku: product.sku,
+    offers: {
+      "@type": "Offer",
+      url: `${base}/producto/${id}`,
+      priceCurrency: "PEN",
+      price: Number(product.price).toFixed(2),
+      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: "K Moda y Estilo" },
+    },
+    brand: { "@type": "Brand", name: "K Moda y Estilo" },
+    category: product.category.name,
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Link
           href="/"
@@ -65,11 +123,15 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         </Link>
 
         <div className="mt-6 grid lg:grid-cols-2 gap-10 items-start">
-          <div className="rounded-3xl overflow-hidden border border-slate-100 bg-slate-50">
-            <img
-              src={product.images[0] || "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=80"}
+          <div className="rounded-3xl overflow-hidden border border-slate-100 bg-slate-50 relative aspect-square">
+            <Image
+              src={heroImage}
               alt={product.name}
-              className="w-full h-full object-cover aspect-square"
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              unoptimized={heroImage.includes("unsplash.com")}
             />
           </div>
 

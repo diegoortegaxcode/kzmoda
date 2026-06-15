@@ -36,8 +36,20 @@ async function getActingUserId(): Promise<string> {
   return user.id;
 }
 
+export async function getNextSkuSuggestion(prefix: string): Promise<string> {
+  const matching = await db.product.findMany({
+    where: { sku: { startsWith: `${prefix}-` } },
+    select: { sku: true },
+  });
+  const nums = matching
+    .map((p) => parseInt(p.sku.slice(prefix.length + 1), 10))
+    .filter((n) => !isNaN(n));
+  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return `${prefix}-${String(next).padStart(3, "0")}`;
+}
+
 export async function fetchInventario() {
-  const [rawProducts, categories, allCategories] = await Promise.all([
+  const [rawProducts, categories, allCategories, settings] = await Promise.all([
     db.product.findMany({
       include: { category: { select: { id: true, name: true } } },
       orderBy: [{ active: "desc" }, { name: "asc" }],
@@ -51,6 +63,7 @@ export async function fetchInventario() {
       orderBy: { name: "asc" },
       select: { id: true, name: true, active: true },
     }),
+    db.storeSettings.upsert({ where: { id: "singleton" }, update: {}, create: { id: "singleton" }, select: { skuPrefixes: true } }),
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,7 +82,7 @@ export async function fetchInventario() {
     image: p.images[0] ?? "",
   }));
 
-  return { products, categories, allCategories };
+  return { products, categories, allCategories, skuPrefixes: settings.skuPrefixes };
 }
 
 export async function createCategoryAction(

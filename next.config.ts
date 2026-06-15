@@ -9,7 +9,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**" },
       { protocol: "http", hostname: "**" },
     ],
+    formats: ["image/avif", "image/webp"],
   },
+  // Ocultar header X-Powered-By
+  poweredByHeader: false,
 };
 
 export default nextConfig;

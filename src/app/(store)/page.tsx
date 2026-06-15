@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Hero from "@/components/store/Hero";
 import ProductGrid from "@/components/store/ProductGrid";
 import ProductShowcase from "@/components/store/ProductShowcase";
@@ -8,8 +9,17 @@ import { toPlainDescription } from "@/lib/product-description";
 
 export const revalidate = 60;
 
-async function getData(): Promise<{ products: StoreProduct[]; categories: StoreCategory[] }> {
-  const [raw, categories] = await Promise.all([
+export const metadata: Metadata = {
+  title: "K Moda y Estilo — Moda femenina con elegancia",
+  description: "Descubre nuestra colección exclusiva de moda femenina. Prendas de calidad con precios directos y entrega rápida en Lima, Perú.",
+  alternates: {
+    canonical: process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com",
+  },
+};
+
+type BannerData = { imageUrl: string; title: string | null; subtitle: string | null; link: string | null };
+async function getData(): Promise<{ products: StoreProduct[]; categories: StoreCategory[]; banners: BannerData[] }> {
+  const [raw, categories, banners] = await Promise.all([
     db.product.findMany({
       where: { active: true, stock: { gt: 0 } },
       include: { category: { select: { id: true, name: true, slug: true } } },
@@ -17,8 +27,10 @@ async function getData(): Promise<{ products: StoreProduct[]; categories: StoreC
       take: 60,
     }),
     db.category.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    db.banner.findMany({ where: { active: true }, orderBy: [{ order: "asc" }, { createdAt: "desc" }], select: { imageUrl: true, title: true, subtitle: true, link: true } }),
   ]);
   return {
+    banners,
     products: raw.map((p) => ({
       id: p.id,
       name: p.name,
@@ -33,8 +45,19 @@ async function getData(): Promise<{ products: StoreProduct[]; categories: StoreC
   };
 }
 
+const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+
+const orgJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ClothingStore",
+  name: "K Moda y Estilo",
+  url: base,
+  description: "Tienda de moda femenina con calidad garantizada y entrega rápida.",
+  address: { "@type": "PostalAddress", addressCountry: "PE" },
+};
+
 export default async function StorePage() {
-  const { products, categories } = await getData();
+  const { products, categories, banners } = await getData();
   const popularProducts = [...products].sort((a, b) => b.stock - a.stock).slice(0, 8);
   const popularIds = new Set(popularProducts.map((product) => product.id));
   const recommendedProducts = products
@@ -44,8 +67,12 @@ export default async function StorePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+      />
       <section id="novedades">
-        <Hero />
+        <Hero banners={banners} />
       </section>
       <ProductGrid products={products} categories={categories} />
       <section id="ofertas">

@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   keywords: ["moda", "ropa", "estilo", "moda femenina", "K Moda", "vestidos", "blusas", "Lima", "Perú"],
   authors: [{ name: "K Moda y Estilo" }],
   creator: "K Moda y Estilo",
+  icons: {
+    icon: "/favicon.jpg",
+    apple: "/favicon.jpg",
+  },
   openGraph: {
     title: "K Moda y Estilo — Moda femenina con elegancia",
     description: "Descubre la colección exclusiva de K Moda y Estilo. Moda femenina con calidad garantizada y entrega rápida.",

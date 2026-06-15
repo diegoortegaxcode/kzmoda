@@ -39,7 +39,7 @@ function CustomerLoginForm() {
         </div>
 
         <div className="bg-white rounded-2xl p-7 shadow-sm border border-rose-100">
-          <form method="POST" action="/api/auth/customer" className="space-y-4">
+          <form method="POST" action="/api/auth/unified" className="space-y-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Correo electrónico

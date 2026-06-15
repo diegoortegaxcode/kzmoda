@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Search, Menu, X, User } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/img/logo.jpeg";
@@ -19,6 +20,23 @@ interface CustomerInfo { name: string; initials: string }
 export default function StoreNavbar({ customer }: { customer?: CustomerInfo | null }) {
   const { count, toggle } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    router.push(`/buscar?q=${encodeURIComponent(q)}`);
+    setSearchOpen(false);
+    setQuery("");
+  };
+
+  const toggleSearch = () => {
+    setSearchOpen((v) => !v);
+    if (searchOpen) setQuery("");
+  };
 
   return (
     <>
@@ -71,9 +89,11 @@ export default function StoreNavbar({ customer }: { customer?: CustomerInfo | nu
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={toggleSearch}
               className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 text-slate-500 hover:text-[var(--brand-rose)] transition-colors"
+              aria-label="Buscar"
             >
-              <Search size={17} strokeWidth={2} />
+              {searchOpen ? <X size={17} strokeWidth={2} /> : <Search size={17} strokeWidth={2} />}
             </motion.button>
 
             {customer ? (
@@ -134,6 +154,37 @@ export default function StoreNavbar({ customer }: { customer?: CustomerInfo | nu
             </motion.button>
           </div>
         </div>
+
+        {/* Search bar */}
+        <AnimatePresence>
+          {searchOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="overflow-hidden border-t border-rose-100"
+            >
+              <form onSubmit={handleSearch} className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex gap-2">
+                <input
+                  autoFocus
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar productos, categorías…"
+                  className="flex-1 px-4 py-2 text-sm rounded-xl border border-slate-200 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all"
+                />
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ background: "var(--brand-rose)" }}
+                >
+                  Buscar
+                </button>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Mobile menu */}
         <AnimatePresence>

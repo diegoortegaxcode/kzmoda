@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock } from "lucide-react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Image from "next/image";
 import logo from "@/img/logo.jpeg";
 
@@ -12,7 +12,7 @@ const errorMessages: Record<string, string> = {
   credenciales: "Credenciales inválidas.",
 };
 
-export default function LoginPage() {
+function AdminLoginForm() {
   const [showPwd, setShowPwd] = useState(false);
   const searchParams = useSearchParams();
   const errorKey = searchParams.get("error");
@@ -144,5 +144,13 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <AdminLoginForm />
+    </Suspense>
   );
 }

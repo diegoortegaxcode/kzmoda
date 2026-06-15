@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 
 const errorMessages: Record<string, string> = {
@@ -11,7 +11,7 @@ const errorMessages: Record<string, string> = {
   credenciales: "Credenciales inválidas o cuenta no activada.",
 };
 
-export default function CustomerLoginPage() {
+function CustomerLoginForm() {
   const [showPwd, setShowPwd] = useState(false);
   const searchParams = useSearchParams();
   const errorKey = searchParams.get("error");
@@ -111,5 +111,13 @@ export default function CustomerLoginPage() {
         </p>
       </motion.div>
     </div>
+  );
+}
+
+export default function CustomerLoginPage() {
+  return (
+    <Suspense>
+      <CustomerLoginForm />
+    </Suspense>
   );
 }

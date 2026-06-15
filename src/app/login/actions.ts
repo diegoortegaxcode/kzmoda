@@ -6,7 +6,7 @@ import { signJWT } from "@/lib/jwt";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export type LoginResult = { error: string } | null;
+export type LoginResult = { error: string } | { ok: true } | null;
 
 export async function loginAction(_prev: LoginResult, formData: FormData): Promise<LoginResult> {
   const email = ((formData.get("email") as string) ?? "").trim().toLowerCase();
@@ -16,7 +16,6 @@ export async function loginAction(_prev: LoginResult, formData: FormData): Promi
 
   const user = await db.user.findUnique({ where: { email } });
 
-  // Use constant-time comparison path even on not-found to avoid timing attacks
   const valid = user ? await verifyPassword(password, user.passwordHash) : false;
 
   if (!user || !user.active || !valid) {
@@ -35,11 +34,11 @@ export async function loginAction(_prev: LoginResult, formData: FormData): Promi
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 28800, // 8 h
+    maxAge: 28800,
     path: "/",
   });
 
-  redirect("/admin");
+  return { ok: true };
 }
 
 export async function logoutAction(): Promise<void> {

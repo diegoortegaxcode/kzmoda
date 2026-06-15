@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { useState } from "react";
@@ -9,8 +10,13 @@ import logo from "@/img/logo.jpeg";
 import { loginAction, type LoginResult } from "./actions";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState<LoginResult, FormData>(loginAction, null);
   const [showPwd, setShowPwd] = useState(false);
+
+  useEffect(() => {
+    if (state && "ok" in state) router.push("/admin");
+  }, [state, router]);
 
   return (
     <div
@@ -135,7 +141,7 @@ export default function LoginPage() {
             </div>
 
             {/* Error */}
-            {state?.error && (
+            {state && "error" in state && state.error && (
               <motion.p
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}

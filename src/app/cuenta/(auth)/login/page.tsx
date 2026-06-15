@@ -1,15 +1,21 @@
 "use client";
 
-import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, ShoppingBag } from "lucide-react";
+import { Eye, EyeOff, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
-import { customerLoginAction, type LoginResult } from "./actions";
+
+const errorMessages: Record<string, string> = {
+  campos: "Completa todos los campos.",
+  credenciales: "Credenciales inválidas o cuenta no activada.",
+};
 
 export default function CustomerLoginPage() {
-  const [state, formAction, pending] = useActionState<LoginResult, FormData>(customerLoginAction, null);
   const [showPwd, setShowPwd] = useState(false);
+  const searchParams = useSearchParams();
+  const errorKey = searchParams.get("error");
+  const errorMsg = errorKey ? (errorMessages[errorKey] ?? "Error al iniciar sesión.") : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-rose-50/40">
@@ -33,7 +39,7 @@ export default function CustomerLoginPage() {
         </div>
 
         <div className="bg-white rounded-2xl p-7 shadow-sm border border-rose-100">
-          <form action={formAction} className="space-y-4">
+          <form method="POST" action="/api/auth/customer" className="space-y-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Correo electrónico
@@ -71,24 +77,22 @@ export default function CustomerLoginPage() {
               </div>
             </div>
 
-            {state?.error && (
+            {errorMsg && (
               <motion.p
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-xs px-3 py-2 rounded-lg bg-rose-50 text-rose-600 border border-rose-100"
               >
-                {state.error}
+                {errorMsg}
               </motion.p>
             )}
 
             <button
               type="submit"
-              disabled={pending}
-              className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all mt-2 text-white disabled:opacity-70"
+              className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all mt-2 text-white"
               style={{ background: "var(--brand-rose)" }}
             >
-              {pending ? <Loader2 size={16} className="animate-spin" /> : null}
-              {pending ? "Verificando…" : "Ingresar"}
+              Ingresar
             </button>
           </form>
 

@@ -1,13 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import logo from "@/img/logo.jpeg";
-import { loginAction, type LoginResult } from "./actions";
 
 const errorMessages: Record<string, string> = {
   campos: "Completa todos los campos.",
@@ -15,7 +13,6 @@ const errorMessages: Record<string, string> = {
 };
 
 export default function LoginPage() {
-  const [, formAction, pending] = useActionState<LoginResult, FormData>(loginAction, null);
   const [showPwd, setShowPwd] = useState(false);
   const searchParams = useSearchParams();
   const errorKey = searchParams.get("error");
@@ -26,12 +23,10 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
       style={{ background: "linear-gradient(135deg, #FFF0F5 0%, #FCE4EC 50%, #F8BBD9 100%)" }}
     >
-      {/* Rose radial glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ background: "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(233,30,99,0.15), transparent)" }}
       />
-      {/* Subtle dot pattern */}
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.06]"
         style={{ backgroundImage: "radial-gradient(#E91E63 1px, transparent 1px)", backgroundSize: "28px 28px" }}
@@ -43,7 +38,6 @@ export default function LoginPage() {
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
         className="w-full max-w-sm relative"
       >
-        {/* Logo */}
         <div className="text-center mb-8">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -65,7 +59,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Card */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,8 +73,7 @@ export default function LoginPage() {
             <p className="text-sm font-semibold" style={{ color: "#880E4F" }}>Iniciar sesión</p>
           </div>
 
-          <form action={formAction} className="space-y-4">
-            {/* Email */}
+          <form method="POST" action="/api/auth/admin" className="space-y-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#AD1457" }}>
                 Correo electrónico
@@ -94,18 +86,11 @@ export default function LoginPage() {
                 placeholder="admin@kmoda.com"
                 className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
                 style={{ background: "#FFF5F8", border: "1px solid #F8BBD9", color: "#3D0020" }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = "#E91E63";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(233,30,99,0.1)";
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = "#F8BBD9";
-                  e.currentTarget.style.boxShadow = "none";
-                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#E91E63"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(233,30,99,0.1)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#F8BBD9"; e.currentTarget.style.boxShadow = "none"; }}
               />
             </div>
 
-            {/* Password */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#AD1457" }}>
                 Contraseña
@@ -119,14 +104,8 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   className="w-full px-4 py-3 pr-11 rounded-xl text-sm outline-none transition-all"
                   style={{ background: "#FFF5F8", border: "1px solid #F8BBD9", color: "#3D0020" }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = "#E91E63";
-                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(233,30,99,0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = "#F8BBD9";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "#E91E63"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(233,30,99,0.1)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "#F8BBD9"; e.currentTarget.style.boxShadow = "none"; }}
                 />
                 <button
                   type="button"
@@ -139,7 +118,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Error */}
             {errorMsg && (
               <motion.p
                 initial={{ opacity: 0, y: -4 }}
@@ -151,18 +129,13 @@ export default function LoginPage() {
               </motion.p>
             )}
 
-            {/* Submit */}
-            <motion.button
-              whileHover={{ scale: pending ? 1 : 1.02, boxShadow: pending ? undefined : "0 8px 24px rgba(233,30,99,0.35)" }}
-              whileTap={{ scale: pending ? 1 : 0.98 }}
+            <button
               type="submit"
-              disabled={pending}
-              className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all mt-2 disabled:opacity-70"
+              className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all mt-2"
               style={{ background: "linear-gradient(135deg, #E91E63, #C2185B)", color: "#fff" }}
             >
-              {pending ? <Loader2 size={16} className="animate-spin" /> : null}
-              {pending ? "Verificando…" : "Ingresar al Panel"}
-            </motion.button>
+              Ingresar al Panel
+            </button>
           </form>
         </motion.div>
 

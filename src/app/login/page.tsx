@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { useState } from "react";
@@ -10,13 +9,12 @@ import logo from "@/img/logo.jpeg";
 import { loginAction, type LoginResult } from "./actions";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [state, formAction, pending] = useActionState<LoginResult, FormData>(loginAction, null);
   const [showPwd, setShowPwd] = useState(false);
 
   useEffect(() => {
-    if (state && "ok" in state) router.push("/admin");
-  }, [state, router]);
+    if (state && "ok" in state) window.location.href = "/admin";
+  }, [state]);
 
   return (
     <div

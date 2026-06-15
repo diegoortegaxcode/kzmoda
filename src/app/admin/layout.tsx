@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const token = store.get("kmoda_session")?.value;
   const session = token ? await verifyJWT(token) : null;
 
-  if (!session || session.role === "CLIENTE") redirect("/login");
+  if (!session || session.role === "CLIENTE") redirect("/cuenta/login");
 
   const role = session.role as "ADMIN" | "ASISTENTE";
 

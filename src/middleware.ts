@@ -9,10 +9,10 @@ export async function middleware(req: NextRequest) {
   // ── Admin routes ──────────────────────────────────────────────────────────
   if (pathname.startsWith("/admin")) {
     const token = req.cookies.get("kmoda_session")?.value;
-    if (!token) return NextResponse.redirect(new URL("/login", req.url));
+    if (!token) return NextResponse.redirect(new URL("/cuenta/login", req.url));
     const session = await verifyJWT(token);
     if (!session || session.role === "CLIENTE") {
-      const res = NextResponse.redirect(new URL("/login", req.url));
+      const res = NextResponse.redirect(new URL("/cuenta/login", req.url));
       res.cookies.delete("kmoda_session");
       return res;
     }

@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Search, Bell, Plus, LogOut, CheckCircle2 } from "lucide-react";
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { logoutAction } from "@/app/login/actions";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -14,7 +13,6 @@ interface TopBarProps {
 
 export default function TopBar({ userName, userRole }: TopBarProps) {
   const [focused, setFocused] = useState(false);
-  const [, startTransition] = useTransition();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,10 +37,6 @@ export default function TopBar({ userName, userRole }: TopBarProps) {
     () => results.customers.length > 0 || results.products.length > 0,
     [results]
   );
-
-  function handleLogout() {
-    startTransition(() => logoutAction());
-  }
 
   useEffect(() => {
     let active = true;
@@ -319,15 +313,17 @@ export default function TopBar({ userName, userRole }: TopBarProps) {
             <p className="text-xs font-semibold text-slate-800 leading-tight">{userName}</p>
             <p className="text-[10px] text-slate-400">{userRole === "ADMIN" ? "Administrador" : "Asistente"}</p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleLogout}
-            title="Cerrar sesión"
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors"
-          >
-            <LogOut size={15} strokeWidth={2} />
-          </motion.button>
+          <form method="POST" action="/api/auth/logout">
+            <motion.button
+              type="submit"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title="Cerrar sesión"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors"
+            >
+              <LogOut size={15} strokeWidth={2} />
+            </motion.button>
+          </form>
         </div>
       )}
     </motion.header>

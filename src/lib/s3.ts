@@ -22,7 +22,6 @@ export async function uploadToS3(file: File): Promise<string> {
       Key: key,
       Body: buffer,
       ContentType: file.type || "image/jpeg",
-      ACL: "public-read",
     })
   );
 

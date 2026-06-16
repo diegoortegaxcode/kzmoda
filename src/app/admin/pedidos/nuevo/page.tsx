@@ -23,6 +23,8 @@ export default async function NuevoPedidoPage({
         name: true,
         sku: true,
         price: true,
+        cashPrice: true,
+        separateDeposit: true,
         stock: true,
         images: true,
         category: { select: { name: true } },
@@ -32,7 +34,12 @@ export default async function NuevoPedidoPage({
     }),
   ]);
 
-  const prods = products.map((p) => ({ ...p, price: Number(p.price) }));
+  const prods = products.map((p) => ({
+    ...p,
+    price: Number(p.price),
+    cashPrice: p.cashPrice ? Number(p.cashPrice) : null,
+    separateDeposit: p.separateDeposit ? Number(p.separateDeposit) : null,
+  }));
 
   return (
     <div className="flex-1 overflow-y-auto p-6">

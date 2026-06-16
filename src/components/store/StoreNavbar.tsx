@@ -82,10 +82,8 @@ export default function StoreNavbar({ customer }: { customer?: CustomerInfo | nu
             ))}
           </nav>
 
-          <div className="flex-1 hidden md:block" />
-
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

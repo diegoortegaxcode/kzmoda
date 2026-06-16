@@ -3,6 +3,8 @@ export interface StoreProduct {
   name: string;
   description: string;
   price: number;
+  cashPrice?: number | null;
+  separateDeposit?: number | null;
   stock: number;
   images: string[];
   category: string;

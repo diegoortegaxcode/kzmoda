@@ -39,6 +39,29 @@ export async function createBannerAction(_: unknown, formData: FormData) {
   return null;
 }
 
+export async function updateBannerAction(_: unknown, formData: FormData) {
+  const id = (formData.get("id") as string).trim();
+  const file = formData.get("image") as File | null;
+  const imageUrl = (formData.get("imageUrl") as string || "").trim();
+  const currentImage = (formData.get("currentImage") as string || "").trim();
+  const title = (formData.get("title") as string || "").trim() || null;
+  const subtitle = (formData.get("subtitle") as string || "").trim() || null;
+  const link = (formData.get("link") as string || "").trim() || null;
+
+  let finalUrl = currentImage;
+  if (file && file.size > 0) {
+    try { finalUrl = await uploadToS3(file); } catch { return { error: "Error al subir imagen a S3" }; }
+  } else if (imageUrl) {
+    finalUrl = imageUrl;
+  }
+  if (!finalUrl) return { error: "Debes proveer una imagen o URL" };
+
+  await db.banner.update({ where: { id }, data: { imageUrl: finalUrl, title, subtitle, link } });
+  revalidatePath("/admin/banners");
+  revalidatePath("/");
+  return null;
+}
+
 export async function toggleBannerAction(id: string, active: boolean) {
   await db.banner.update({ where: { id }, data: { active } });
   revalidatePath("/admin/banners");

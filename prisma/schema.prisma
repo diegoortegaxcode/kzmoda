@@ -47,19 +47,21 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  sku         String   @unique
-  price       Decimal  @db.Decimal(10, 2)
-  costPrice   Decimal  @db.Decimal(10, 2) @map("cost_price")
-  stock       Int      @default(0)
-  minStock    Int      @default(5) @map("min_stock")
-  active      Boolean  @default(true)
-  images      String[] @default([])
-  categoryId  String   @map("category_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  sku              String   @unique
+  price            Decimal  @db.Decimal(10, 2)
+  costPrice        Decimal  @db.Decimal(10, 2) @map("cost_price")
+  cashPrice        Decimal? @db.Decimal(10, 2) @map("cash_price")
+  separateDeposit  Decimal? @db.Decimal(10, 2) @map("separate_deposit")
+  stock            Int      @default(0)
+  minStock         Int      @default(5) @map("min_stock")
+  active           Boolean  @default(true)
+  images           String[] @default([])
+  categoryId       String   @map("category_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   category       Category        @relation(fields: [categoryId], references: [id])
   orderItems     OrderItem[]
@@ -164,6 +166,7 @@ enum PaymentType {
   CREDITO
   YAPE
   PLIN
+  SEPARADO
 }
 
 model OrderItem {

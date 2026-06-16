@@ -11,8 +11,8 @@ import { createOrderAction } from "./actions";
 import clsx from "clsx";
 
 interface Customer { id: string; name: string; email: string | null; phone: string | null }
-interface Product  { id: string; name: string; sku: string; price: number; stock: number; images: string[]; category: { name: string } }
-interface LineItem  { productId: string; name: string; sku: string; qty: number; unitPrice: number; stock: number; image: string | null }
+interface Product  { id: string; name: string; sku: string; price: number; cashPrice: number | null; separateDeposit: number | null; stock: number; images: string[]; category: { name: string } }
+interface LineItem  { productId: string; name: string; sku: string; qty: number; unitPrice: number; stock: number; image: string | null; separateDeposit: number | null }
 
 const PAYMENT_TYPES = [
   { value: "EFECTIVO",      label: "Efectivo" },
@@ -20,6 +20,7 @@ const PAYMENT_TYPES = [
   { value: "PLIN",          label: "Plin" },
   { value: "TRANSFERENCIA", label: "Transferencia" },
   { value: "CREDITO",       label: "Crédito" },
+  { value: "SEPARADO",      label: "Separado" },
 ] as const;
 
 const STATUS_STYLE: Record<string, string> = {
@@ -28,6 +29,7 @@ const STATUS_STYLE: Record<string, string> = {
   PLIN:          "bg-blue-50 text-blue-700",
   TRANSFERENCIA: "bg-sky-50 text-sky-700",
   CREDITO:       "bg-amber-50 text-amber-700",
+  SEPARADO:      "bg-orange-50 text-orange-700",
 };
 
 function CustomerCombobox({ customers, selected, onSelect, initialQuery }: {
@@ -157,6 +159,8 @@ function ProductSearch({ products, addedIds, onAdd, initialQuery }: {
                 <p className="text-xs font-semibold text-slate-900 truncate">{p.name}</p>
                 <p className="text-[10px] text-slate-400">{p.sku} · {p.category.name}</p>
                 <p className="text-xs font-bold text-slate-700 mt-0.5">S/ {p.price.toFixed(2)}</p>
+                {p.cashPrice && <p className="text-[10px] text-rose-500 font-semibold">🔥 Contado S/ {p.cashPrice.toFixed(2)}</p>}
+                {p.separateDeposit && <p className="text-[10px] text-orange-500">Separa con S/ {p.separateDeposit.toFixed(2)}</p>}
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <span className={clsx("text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
@@ -211,6 +215,7 @@ export default function NuevoPedidoClient({
 
   const addedIds = new Set(items.map((i) => i.productId));
   const subtotal = items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  const suggestedDeposit = items.reduce((s, i) => s + (i.separateDeposit ?? 0) * i.qty, 0);
   const discountAmt = Math.min(Math.max(discount, 0), subtotal);
   const total = subtotal - discountAmt;
   const paidAmountSafe = Math.min(Math.max(paidAmount, 0), total);
@@ -219,8 +224,15 @@ export default function NuevoPedidoClient({
   function handleAddProduct(p: Product) {
     setItems((prev) => {
       if (prev.find((i) => i.productId === p.id)) return prev;
-      return [...prev, { productId: p.id, name: p.name, sku: p.sku, qty: 1, unitPrice: p.price, stock: p.stock, image: p.images[0] ?? null }];
+      return [...prev, { productId: p.id, name: p.name, sku: p.sku, qty: 1, unitPrice: p.price, stock: p.stock, image: p.images[0] ?? null, separateDeposit: p.separateDeposit }];
     });
+  }
+
+  function handleApplyCashPrice(productId: string) {
+    const source = items.find((i) => i.productId === productId);
+    const original = (products as Product[]).find((p) => p.id === productId);
+    if (!source || !original?.cashPrice) return;
+    setItems((prev) => prev.map((i) => i.productId === productId ? { ...i, unitPrice: original.cashPrice! } : i));
   }
 
   function handleQty(productId: string, delta: number) {
@@ -330,7 +342,7 @@ export default function NuevoPedidoClient({
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-slate-900 truncate">{item.name}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       {/* Qty stepper */}
                       <div className="flex items-center gap-1">
                         <button onClick={() => handleQty(item.productId, -1)}
@@ -356,6 +368,16 @@ export default function NuevoPedidoClient({
                           className="w-16 text-xs font-semibold text-slate-800 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:border-[var(--brand-rose)] bg-white"
                         />
                       </div>
+                      {/* Cash price shortcut */}
+                      {(products as Product[]).find((p) => p.id === item.productId)?.cashPrice && (
+                        <button
+                          type="button"
+                          onClick={() => handleApplyCashPrice(item.productId)}
+                          className="text-[9px] font-bold text-rose-500 bg-rose-50 border border-rose-200 rounded-md px-1.5 py-0.5 hover:bg-rose-100 transition-colors"
+                        >
+                          🔥 Contado
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
@@ -445,8 +467,33 @@ export default function NuevoPedidoClient({
           </div>
 
           <AnimatePresence>
+            {paymentType === "SEPARADO" && suggestedDeposit > 0 && (
+              <motion.div
+                key="deposit-hint"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5">
+                  <span className="text-base">📦</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-orange-700">Anticipo sugerido: S/ {suggestedDeposit.toFixed(2)}</p>
+                    <p className="text-[10px] text-orange-500">Basado en el depósito mínimo de cada producto</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPaidAmount(suggestedDeposit)}
+                    className="text-[10px] font-bold text-white bg-orange-400 hover:bg-orange-500 rounded-lg px-2 py-1 transition-colors shrink-0"
+                  >
+                    Aplicar
+                  </button>
+                </div>
+              </motion.div>
+            )}
             {pendingAmount > 0 && (
               <motion.div
+                key="due-date"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}

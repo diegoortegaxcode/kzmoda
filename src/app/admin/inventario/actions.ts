@@ -16,6 +16,8 @@ export type ProductRow = {
   minStock: number;
   price: number;
   costPrice: number;
+  cashPrice: number | null;
+  separateDeposit: number | null;
   active: boolean;
   categoryId: string;
   category: string;
@@ -76,6 +78,8 @@ export async function fetchInventario() {
     minStock: p.minStock,
     price: Number(p.price),
     costPrice: Number(p.costPrice),
+    cashPrice: p.cashPrice ? Number(p.cashPrice) : null,
+    separateDeposit: p.separateDeposit ? Number(p.separateDeposit) : null,
     active: p.active,
     categoryId: p.categoryId,
     category: p.category.name,
@@ -127,7 +131,12 @@ export async function createProductAction(
   const sku = (formData.get("sku") as string).trim().toUpperCase();
   const categoryId = formData.get("categoryId") as string;
   const price = parseFloat(formData.get("price") as string);
-  const costPrice = parseFloat(formData.get("costPrice") as string);
+  const costPriceRaw = formData.get("costPrice") as string;
+  const costPrice = costPriceRaw && costPriceRaw.trim() ? parseFloat(costPriceRaw) : 0;
+  const cashPriceRaw = formData.get("cashPrice") as string;
+  const cashPrice = cashPriceRaw && cashPriceRaw.trim() ? parseFloat(cashPriceRaw) : null;
+  const separateDepositRaw = formData.get("separateDeposit") as string;
+  const separateDeposit = separateDepositRaw && separateDepositRaw.trim() ? parseFloat(separateDepositRaw) : null;
   const stock = parseInt(formData.get("stock") as string) || 0;
   const minStock = parseInt(formData.get("minStock") as string) || 5;
   const rawDescription = ((formData.get("description") as string) || "").trim();
@@ -136,11 +145,11 @@ export async function createProductAction(
   const plainDescription = stripHtml(safeDescription);
   const description = plainDescription.length === 0 ? undefined : safeDescription;
 
-  if (!name || !sku || !categoryId || isNaN(price) || isNaN(costPrice)) {
+  if (!name || !sku || !categoryId || isNaN(price)) {
     return { error: "Completa todos los campos requeridos." };
   }
-  if (price <= 0 || costPrice <= 0) {
-    return { error: "Los precios deben ser mayores a 0." };
+  if (price <= 0) {
+    return { error: "El precio de venta debe ser mayor a 0." };
   }
 
   // ─── Image handling → S3 ─────────────────────────────────────────────────
@@ -149,8 +158,12 @@ export async function createProductAction(
   const imageUrl = ((formData.get("imageUrl") as string) || "").trim();
 
   if (imageFile && imageFile.size > 0) {
-    const s3Url = await uploadToS3(imageFile);
-    images = [s3Url];
+    try {
+      const s3Url = await uploadToS3(imageFile);
+      images = [s3Url];
+    } catch {
+      return { error: "No se pudo subir la imagen. Revisa la configuración de S3." };
+    }
   } else if (imageUrl) {
     images = [imageUrl];
   }
@@ -158,7 +171,7 @@ export async function createProductAction(
 
   try {
     await db.product.create({
-      data: { name, sku, categoryId, price, costPrice, stock, minStock, description, images },
+      data: { name, sku, categoryId, price, costPrice, cashPrice, separateDeposit, stock, minStock, description, images },
     });
     revalidatePath("/admin/inventario");
     revalidatePath("/");
@@ -214,8 +227,15 @@ export async function updateProductAction(
   const sku = (formData.get("sku") as string).trim().toUpperCase();
   const categoryId = (formData.get("categoryId") as string).trim();
   const price = parseFloat(formData.get("price") as string);
-  const costPrice = parseFloat(formData.get("costPrice") as string);
+  const costPriceRaw2 = formData.get("costPrice") as string;
+  const costPrice = costPriceRaw2 && costPriceRaw2.trim() ? parseFloat(costPriceRaw2) : 0;
+  const cashPriceRaw = formData.get("cashPrice") as string;
+  const cashPrice = cashPriceRaw && cashPriceRaw.trim() ? parseFloat(cashPriceRaw) : null;
+  const separateDepositRaw = formData.get("separateDeposit") as string;
+  const separateDeposit = separateDepositRaw && separateDepositRaw.trim() ? parseFloat(separateDepositRaw) : null;
   const minStock = parseInt(formData.get("minStock") as string) || 5;
+  const stockRaw = formData.get("stock") as string;
+  const stock = stockRaw !== null && stockRaw.trim() !== "" ? parseInt(stockRaw) : undefined;
   const rawDescription = ((formData.get("description") as string) || "").trim();
   const formattedDescription = /<\/?[a-z][\s\S]*>/i.test(rawDescription) ? rawDescription : plainTextToRichHtml(rawDescription);
   const safeDescription = sanitizeRichDescription(formattedDescription);
@@ -223,11 +243,11 @@ export async function updateProductAction(
   const description = plainDescription.length === 0 ? null : safeDescription;
   const currentImage = ((formData.get("currentImage") as string) || "").trim();
 
-  if (!productId || !name || !sku || !categoryId || isNaN(price) || isNaN(costPrice)) {
+  if (!productId || !name || !sku || !categoryId || isNaN(price)) {
     return { error: "Completa todos los campos requeridos." };
   }
-  if (price <= 0 || costPrice <= 0) {
-    return { error: "Los precios deben ser mayores a 0." };
+  if (price <= 0) {
+    return { error: "El precio de venta debe ser mayor a 0." };
   }
 
   let image = currentImage;
@@ -235,7 +255,11 @@ export async function updateProductAction(
   const imageUrl = ((formData.get("imageUrl") as string) || "").trim();
 
   if (imageFile && imageFile.size > 0) {
-    image = await uploadToS3(imageFile);
+    try {
+      image = await uploadToS3(imageFile);
+    } catch {
+      return { error: "No se pudo subir la imagen. Revisa la configuración de S3." };
+    }
   } else if (imageUrl) {
     image = imageUrl;
   }
@@ -249,7 +273,10 @@ export async function updateProductAction(
         categoryId,
         price,
         costPrice,
+        cashPrice,
+        separateDeposit,
         minStock,
+        ...(stock !== undefined ? { stock } : {}),
         description,
         images: image ? [image] : [],
       },

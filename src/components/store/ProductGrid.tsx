@@ -116,11 +116,23 @@ export default function ProductGrid({ products, categories }: ProductGridProps) 
                 <p className="text-sm text-gray-500 mb-4 line-clamp-1">
                   {product.description}
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xl font-black text-gray-900">
-                    S/ {product.price.toFixed(2)}
-                  </span>
-                  <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-xl font-black text-gray-900">
+                      S/ {product.price.toFixed(2)}
+                    </span>
+                    {product.cashPrice && (
+                      <p className="text-xs font-semibold text-rose-500 mt-0.5">
+                        🔥 Al contado S/ {product.cashPrice.toFixed(2)}
+                      </p>
+                    )}
+                    {product.separateDeposit && (
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Sepáralo desde S/ {product.separateDeposit.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg shrink-0">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                     En stock
                   </div>

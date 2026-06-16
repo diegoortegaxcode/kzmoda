@@ -36,6 +36,8 @@ async function getData(): Promise<{ products: StoreProduct[]; categories: StoreC
       name: p.name,
       description: toPlainDescription(p.description),
       price: Number(p.price),
+      cashPrice: p.cashPrice ? Number(p.cashPrice) : null,
+      separateDeposit: p.separateDeposit ? Number(p.separateDeposit) : null,
       stock: p.stock,
       images: p.images,
       category: p.category.name,

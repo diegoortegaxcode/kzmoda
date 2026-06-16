@@ -2,29 +2,219 @@
 
 import { useActionState, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Eye, EyeOff, ImageIcon, Link as LinkIcon, Loader2, X } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, ImageIcon, Link as LinkIcon, Loader2, X, Pencil } from "lucide-react";
 import Image from "next/image";
 import {
-  createBannerAction, toggleBannerAction, deleteBannerAction,
+  createBannerAction, updateBannerAction, toggleBannerAction, deleteBannerAction,
   type BannerRow,
 } from "./actions";
 
-export default function BannersClient({ banners: initial }: { banners: BannerRow[] }) {
-  const [banners, setBanners] = useState<BannerRow[]>(initial);
-  const [showForm, setShowForm] = useState(false);
+// ── shared modal shell ────────────────────────────────────────────────────────
+function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ duration: 0.25 }}
+        className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg overflow-hidden max-h-[95svh] sm:max-h-[92vh] flex flex-col"
+      >
+        <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-slate-200" />
+        </div>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── image field (shared) ──────────────────────────────────────────────────────
+function ImageField({ currentUrl, onPreview }: { currentUrl?: string; onPreview: (url: string | null) => void }) {
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          Imagen {!currentUrl && <span className="text-rose-500">*</span>}
+        </label>
+        <div
+          className="relative border-2 border-dashed border-slate-200 rounded-xl overflow-hidden bg-slate-50 cursor-pointer hover:border-rose-300 transition-colors"
+          style={{ height: 110 }}
+        >
+          <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-400">
+            <ImageIcon size={24} />
+            <span className="text-xs">{currentUrl ? "Toca para cambiar imagen" : "Toca o arrastra una imagen"}</span>
+          </div>
+          <input
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              onPreview(f ? URL.createObjectURL(f) : null);
+            }}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+          />
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+          <LinkIcon size={11} /> O pega una URL de imagen
+        </label>
+        <input
+          name="imageUrl"
+          type="url"
+          placeholder="https://..."
+          defaultValue=""
+          onChange={(e) => {
+            const v = e.target.value.trim();
+            onPreview(v.startsWith("http") ? v : null);
+          }}
+          className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── create modal ──────────────────────────────────────────────────────────────
+function CreateModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [preview, setPreview] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [state, formAction, pending] = useActionState(createBannerAction, null);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (f) setPreview(URL.createObjectURL(f));
-  }
+  return (
+    <ModalShell title="Nuevo banner" onClose={onClose}>
+      <form
+        action={async (fd) => {
+          await formAction(fd);
+          onSaved();
+          onClose();
+        }}
+        className="p-6 space-y-4 overflow-y-auto"
+      >
+        {preview && (
+          <div className="relative w-full rounded-xl overflow-hidden border border-slate-200" style={{ aspectRatio: "16/5" }}>
+            <Image src={preview} alt="preview" fill className="object-cover" unoptimized />
+          </div>
+        )}
+        <ImageField onPreview={setPreview} />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Título</label>
+            <input name="title" type="text" placeholder="Nueva colección"
+              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Subtítulo</label>
+            <input name="subtitle" type="text" placeholder="Hasta 30% off"
+              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Enlace al hacer clic</label>
+          <input name="link" type="text" placeholder="/coleccion o https://..."
+            className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all" />
+        </div>
+        {state?.error && <p className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{state.error}</p>}
+        <div className="flex gap-2 pt-1">
+          <button type="button" onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" disabled={pending}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+            style={{ background: "var(--brand-rose)" }}>
+            {pending ? <><Loader2 size={14} className="animate-spin" /> Subiendo…</> : "Guardar banner"}
+          </button>
+        </div>
+      </form>
+    </ModalShell>
+  );
+}
 
-  function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const v = e.target.value.trim();
-    if (v.startsWith("http")) setPreview(v);
-    else setPreview(null);
+// ── edit modal ────────────────────────────────────────────────────────────────
+function EditModal({ banner, onClose, onSaved }: { banner: BannerRow; onClose: () => void; onSaved: () => void }) {
+  const [preview, setPreview] = useState<string | null>(banner.imageUrl);
+  const [state, formAction, pending] = useActionState(updateBannerAction, null);
+
+  return (
+    <ModalShell title="Editar banner" onClose={onClose}>
+      <form
+        action={async (fd) => {
+          await formAction(fd);
+          onSaved();
+          onClose();
+        }}
+        className="p-6 space-y-4 overflow-y-auto"
+      >
+        <input type="hidden" name="id" value={banner.id} />
+        <input type="hidden" name="currentImage" value={banner.imageUrl} />
+
+        {preview && (
+          <div className="relative w-full rounded-xl overflow-hidden border border-slate-200" style={{ aspectRatio: "16/5" }}>
+            <Image src={preview} alt="preview" fill className="object-cover" unoptimized />
+          </div>
+        )}
+        <ImageField currentUrl={banner.imageUrl} onPreview={setPreview} />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Título</label>
+            <input name="title" type="text" defaultValue={banner.title ?? ""} placeholder="Nueva colección"
+              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all" />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Subtítulo</label>
+            <input name="subtitle" type="text" defaultValue={banner.subtitle ?? ""} placeholder="Hasta 30% off"
+              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all" />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Enlace al hacer clic</label>
+          <input name="link" type="text" defaultValue={banner.link ?? ""} placeholder="/coleccion o https://..."
+            className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all" />
+        </div>
+        {state?.error && <p className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{state.error}</p>}
+        <div className="flex gap-2 pt-1">
+          <button type="button" onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" disabled={pending}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+            style={{ background: "var(--brand-rose)" }}>
+            {pending ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : "Guardar cambios"}
+          </button>
+        </div>
+      </form>
+    </ModalShell>
+  );
+}
+
+// ── main component ────────────────────────────────────────────────────────────
+export default function BannersClient({ banners: initial }: { banners: BannerRow[] }) {
+  const [banners, setBanners] = useState<BannerRow[]>(initial);
+  const [showCreate, setShowCreate] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<BannerRow | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  async function refreshBanners() {
+    const { getBanners } = await import("./actions");
+    setBanners(await getBanners());
   }
 
   function handleToggle(id: string, current: boolean) {
@@ -33,6 +223,7 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
   }
 
   function handleDelete(id: string) {
+    if (!confirm("¿Eliminar este banner?")) return;
     setBanners((prev) => prev.filter((b) => b.id !== id));
     startTransition(() => deleteBannerAction(id));
   }
@@ -50,7 +241,7 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => setShowForm(true)}
+          onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold self-start sm:self-auto"
           style={{ background: "var(--brand-rose)" }}
         >
@@ -59,155 +250,17 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
         </motion.button>
       </div>
 
-      {/* Upload form modal */}
+      {/* Modals */}
       <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4"
-            onClick={(e) => e.target === e.currentTarget && setShowForm(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              transition={{ duration: 0.25 }}
-              className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg overflow-hidden max-h-[95svh] sm:max-h-[92vh] flex flex-col"
-            >
-              <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
-                <div className="w-10 h-1 rounded-full bg-slate-200" />
-              </div>
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-                <h2 className="text-base font-semibold text-slate-900">Subir banner</h2>
-                <button
-                  onClick={() => setShowForm(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <form
-                action={async (fd) => {
-                  await formAction(fd);
-                  setShowForm(false);
-                  setPreview(null);
-                  // Refresh list
-                  const { getBanners } = await import("./actions");
-                  setBanners(await getBanners());
-                }}
-                className="p-6 space-y-4"
-              >
-                {/* Image upload */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Imagen <span className="text-rose-500">*</span>
-                  </label>
-                  <div
-                    className="relative border-2 border-dashed border-slate-200 rounded-xl overflow-hidden bg-slate-50 cursor-pointer hover:border-rose-300 transition-colors"
-                    style={{ height: preview ? "auto" : 120 }}
-                  >
-                    {preview ? (
-                      <div className="relative w-full" style={{ aspectRatio: "16/5" }}>
-                        <Image src={preview} alt="preview" fill className="object-cover" unoptimized />
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-400">
-                        <ImageIcon size={28} />
-                        <span className="text-xs">Haz clic o arrastra una imagen</span>
-                      </div>
-                    )}
-                    <input
-                      name="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                  </div>
-                </div>
-
-                {/* URL input */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    <LinkIcon size={11} /> O pega una URL de imagen
-                  </label>
-                  <input
-                    name="imageUrl"
-                    type="url"
-                    placeholder="https://..."
-                    onChange={handleUrlChange}
-                    className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                  />
-                </div>
-
-                {/* Title */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Título (opcional)
-                    </label>
-                    <input
-                      name="title"
-                      type="text"
-                      placeholder="Nueva colección"
-                      className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      Subtítulo (opcional)
-                    </label>
-                    <input
-                      name="subtitle"
-                      type="text"
-                      placeholder="Hasta 30% off"
-                      className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Link */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Enlace al hacer clic (opcional)
-                  </label>
-                  <input
-                    name="link"
-                    type="text"
-                    placeholder="/coleccion o https://..."
-                    className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 transition-all"
-                  />
-                </div>
-
-                {state?.error && (
-                  <p className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{state.error}</p>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => { setShowForm(false); setPreview(null); }}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <motion.button
-                    whileHover={{ scale: pending ? 1 : 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    disabled={pending}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ background: "var(--brand-rose)" }}
-                  >
-                    {pending ? <><Loader2 size={14} className="animate-spin" /> Subiendo…</> : "Guardar banner"}
-                  </motion.button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
+        {showCreate && (
+          <CreateModal onClose={() => setShowCreate(false)} onSaved={refreshBanners} />
+        )}
+        {editingBanner && (
+          <EditModal
+            banner={editingBanner}
+            onClose={() => setEditingBanner(null)}
+            onSaved={refreshBanners}
+          />
         )}
       </AnimatePresence>
 
@@ -229,7 +282,7 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
               className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
             >
               <div className="flex flex-col sm:flex-row sm:items-stretch">
-                {/* Image preview */}
+                {/* Image */}
                 <div className="relative w-full h-36 sm:w-48 sm:h-auto shrink-0 bg-slate-100">
                   <Image
                     src={banner.imageUrl}
@@ -248,9 +301,9 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
                   )}
                 </div>
 
-                {/* Info */}
+                {/* Info + actions */}
                 <div className="flex-1 px-4 py-3 sm:px-5 sm:py-4 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-slate-900 truncate">
                       {banner.title ?? <span className="text-slate-400 font-normal italic">Sin título</span>}
                     </p>
@@ -265,14 +318,14 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {/* Toggle */}
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleToggle(banner.id, banner.active)}
                       disabled={isPending}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors"
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors"
                       style={
                         banner.active
                           ? { background: "var(--brand-rose-light)", borderColor: "var(--brand-rose)", color: "var(--brand-rose-dark)" }
@@ -280,7 +333,18 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
                       }
                     >
                       {banner.active ? <Eye size={12} /> : <EyeOff size={12} />}
-                      {banner.active ? "Visible" : "Oculto"}
+                      <span className="hidden sm:inline">{banner.active ? "Visible" : "Oculto"}</span>
+                    </motion.button>
+
+                    {/* Edit */}
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setEditingBanner(banner)}
+                      className="p-2 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-colors border border-transparent hover:border-indigo-100"
+                      title="Editar"
+                    >
+                      <Pencil size={14} />
                     </motion.button>
 
                     {/* Delete */}
@@ -290,6 +354,7 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
                       onClick={() => handleDelete(banner.id)}
                       disabled={isPending}
                       className="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors border border-transparent hover:border-rose-100"
+                      title="Eliminar"
                     >
                       <Trash2 size={14} />
                     </motion.button>

@@ -48,10 +48,10 @@ function useDebounce<T>(value: T, delay = 300): T {
 // ─── Field ───────────────────────────────────────────────────────────────────
 
 function Field({
-  label, name, type = "text", required, placeholder, min, step, children,
+  label, name, type = "text", required, placeholder, min, step, defaultValue, children,
 }: {
   label: string; name: string; type?: string; required?: boolean;
-  placeholder?: string; min?: string; step?: string;
+  placeholder?: string; min?: string; step?: string; defaultValue?: string | number;
   children?: React.ReactNode;
 }) {
   return (
@@ -67,6 +67,7 @@ function Field({
           placeholder={placeholder}
           min={min}
           step={step}
+          defaultValue={defaultValue}
           className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder-slate-300 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
         />
       )}
@@ -77,12 +78,15 @@ function Field({
 // ─── Add Product Modal ────────────────────────────────────────────────────────
 
 function ProductModal({ categories, skuPrefixes, onClose }: { categories: CategoryOption[]; skuPrefixes: string[]; onClose: () => void }) {
-  const [state, formAction, pending] = useActionState<ActionResult, FormData>(createProductAction, null);
+  const [state, formAction, actionPending] = useActionState<ActionResult, FormData>(createProductAction, null);
+  const [transitionPending, startSubmitTransition] = useTransition();
+  const pending = actionPending || transitionPending;
   const [imageMode, setImageMode] = useState<"file" | "url">("file");
   const [preview, setPreview] = useState("");
   const [description, setDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const selectedFileRef = useRef<File | null>(null);
   const [skuValue, setSkuValue] = useState("");
   const [skuLoading, setSkuLoading] = useState(false);
 
@@ -101,12 +105,7 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    // If came from camera input, copy file to main named input
-    if (e.target !== fileInputRef.current && fileInputRef.current) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      fileInputRef.current.files = dt.files;
-    }
+    selectedFileRef.current = file;
     setPreview(URL.createObjectURL(file));
   }
 
@@ -115,9 +114,19 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
   }
 
   function clearImage() {
+    selectedFileRef.current = null;
     setPreview("");
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    if (selectedFileRef.current) fd.set("imageFile", selectedFileRef.current);
+    startSubmitTransition(() => {
+      formAction(fd);
+    });
   }
 
   return (
@@ -155,7 +164,7 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
         </div>
 
         {/* Form */}
-        <form action={formAction} className="px-6 py-5 space-y-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 overflow-y-auto">
           {/* Image picker */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -307,10 +316,13 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
                 </select>
               )}
             </Field>
-            <Field label="Precio Costo (S/)" name="costPrice" type="number" required min="0.01" step="0.01" placeholder="0.00" />
+            <Field label="Precio Costo (S/)" name="costPrice" type="number" min="0" step="0.01" placeholder="Opcional" />
             <Field label="Precio Venta (S/)" name="price" type="number" required min="0.01" step="0.01" placeholder="0.00" />
-            <Field label="Stock Inicial" name="stock" type="number" min="0" placeholder="0" />
-            <Field label="Stock Mínimo" name="minStock" type="number" min="0" placeholder="5" />
+            <Field label="Precio Al Contado (S/)" name="cashPrice" type="number" min="0.01" step="0.01" placeholder="Opcional" />
+            <Field label="Anticipo Separado (S/)" name="separateDeposit" type="number" min="1" step="0.5" placeholder="Opcional" />
+            <div className="col-span-2 border-t border-slate-100 pt-1" />
+            <Field label="Stock Inicial" name="stock" type="number" min="0" placeholder="0" defaultValue={0} />
+            <Field label="Stock Mínimo" name="minStock" type="number" min="0" placeholder="5" defaultValue={5} />
             <div className="col-span-2">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Descripción</label>
               <input type="hidden" name="description" value={description} />
@@ -368,6 +380,7 @@ function ProductEditModal({
   const [imageUrl, setImageUrl] = useState(product.image || "");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const selectedFileRef = useRef<File | null>(null);
 
   useEffect(() => {
     if (saveState?.success) onClose();
@@ -376,17 +389,14 @@ function ProductEditModal({
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (e.target !== fileInputRef.current && fileInputRef.current) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      fileInputRef.current.files = dt.files;
-    }
+    selectedFileRef.current = file;
     setPreview(URL.createObjectURL(file));
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    if (selectedFileRef.current) formData.set("imageFile", selectedFileRef.current);
     setSaveState(null);
     startTransition(async () => {
       const result = await updateProductAction(null, formData);
@@ -566,6 +576,38 @@ function ProductEditModal({
                 step="0.01"
                 defaultValue={product.price}
                 required
+                className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder-slate-300 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
+              />
+            </Field>
+            <Field label="Al Contado (S/)" name="cashPrice" type="number" min="0.01" step="0.01" placeholder="Opcional">
+              <input
+                name="cashPrice"
+                type="number"
+                min="0.01"
+                step="0.01"
+                defaultValue={product.cashPrice ?? ""}
+                placeholder="Opcional"
+                className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder-slate-300 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
+              />
+            </Field>
+            <Field label="Anticipo Separado (S/)" name="separateDeposit" type="number" min="1" step="0.5" placeholder="Opcional">
+              <input
+                name="separateDeposit"
+                type="number"
+                min="1"
+                step="0.5"
+                defaultValue={product.separateDeposit ?? ""}
+                placeholder="Opcional"
+                className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder-slate-300 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
+              />
+            </Field>
+            <div className="col-span-2 border-t border-slate-100 pt-1" />
+            <Field label="Stock Actual" name="stock" type="number" min="0">
+              <input
+                name="stock"
+                type="number"
+                min="0"
+                defaultValue={product.stock}
                 className="px-3 py-2 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder-slate-300 focus:outline-none focus:border-[var(--brand-rose)] focus:ring-2 focus:ring-[var(--brand-rose)]/20 transition"
               />
             </Field>

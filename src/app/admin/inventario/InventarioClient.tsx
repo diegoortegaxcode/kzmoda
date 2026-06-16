@@ -936,9 +936,9 @@ export default function InventarioClient({
 
   return (
     <>
-      <main className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-4 sm:space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-lg font-bold text-slate-900" style={{ fontFamily: "var(--font-playfair)" }}>
               Inventario
@@ -951,17 +951,19 @@ export default function InventarioClient({
               whileTap={{ scale: 0.97 }}
               onClick={handleDownloadPDF}
               disabled={downloading}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all disabled:opacity-60"
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm font-semibold border transition-all disabled:opacity-60"
               style={{ borderColor: "var(--brand-gold)", color: "var(--brand-gold-dark)" }}
             >
               {downloading ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />}
-              {downloading ? "Generando…" : "Catálogo PDF"}
+              <span className="hidden sm:inline">{downloading ? "Generando…" : "Catálogo "}</span>
+              <span className="sm:hidden">{downloading ? "…" : ""}</span>
+              PDF
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setShowCategories(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all"
             >
               <Tag size={15} />
               Categorías
@@ -973,11 +975,12 @@ export default function InventarioClient({
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setShowAdd(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-md"
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm font-bold text-white shadow-md"
               style={{ background: "var(--brand-rose)", boxShadow: "0 4px 14px rgba(233,30,99,0.3)" }}
             >
               <Plus size={16} strokeWidth={2.5} />
-              Añadir Producto
+              <span className="hidden sm:inline">Añadir Producto</span>
+              <span className="sm:hidden">Nuevo</span>
             </motion.button>
           </div>
         </div>

@@ -147,11 +147,11 @@ export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) 
         <Menu size={18} strokeWidth={2} />
       </button>
 
-      {/* Search */}
+      {/* Search – hidden on mobile */}
       <motion.div
         animate={{ width: focused ? 320 : 240 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="relative"
+        className="relative hidden sm:block"
       >
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={2} />
         <input
@@ -229,10 +229,10 @@ export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) 
       >
         <Link
           href="/admin/pedidos/nuevo"
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <Plus size={14} strokeWidth={2.5} />
-          Nuevo Pedido
+          <span className="hidden sm:inline">Nuevo </span>Pedido
         </Link>
       </motion.div>
 

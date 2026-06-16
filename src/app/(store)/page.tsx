@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 import { type StoreProduct, type StoreCategory } from "@/lib/mock-data";
 import { toPlainDescription } from "@/lib/product-description";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "K Moda y Estilo — Moda femenina con elegancia",

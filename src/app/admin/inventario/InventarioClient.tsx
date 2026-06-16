@@ -1117,6 +1117,7 @@ export default function InventarioClient({
                 {filteredProducts.map((p) => {
                   const chip = stockChip(p.stock, p.minStock);
                   const mgn = margin(p.price, p.costPrice);
+                  const isStoreVisible = p.active && p.stock > 0;
                   return (
                     <motion.tr
                       key={p.id}
@@ -1141,9 +1142,16 @@ export default function InventarioClient({
                       {/* Producto */}
                       <td className="px-4 py-3.5">
                         <p className="font-semibold text-slate-900 truncate max-w-[200px]">{p.name}</p>
-                        <span className="inline-block mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
-                          {p.category}
-                        </span>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                            {p.category}
+                          </span>
+                          <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isStoreVisible ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                          }`}>
+                            {isStoreVisible ? "Visible en tienda" : p.stock <= 0 ? "No aparece: sin stock" : "No aparece: inactivo"}
+                          </span>
+                        </div>
                       </td>
                       {/* SKU */}
                       <td className="px-4 py-3.5">

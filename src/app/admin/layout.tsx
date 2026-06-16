@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyJWT } from "@/lib/jwt";
-import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
+import AdminShell from "@/components/AdminShell";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -19,12 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const role = session.role as "ADMIN" | "ASISTENTE";
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar role={role} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar userName={session.name} userRole={role} />
-        {children}
-      </div>
-    </div>
+    <AdminShell role={role} userName={session.name} userRole={role}>
+      {children}
+    </AdminShell>
   );
 }

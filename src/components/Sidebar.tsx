@@ -1,9 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   LayoutDashboard, Warehouse, Users, CreditCard,
-  Settings, ChevronRight, FileCheck, ShoppingBag, ImageIcon,
+  Settings, ChevronRight, FileCheck, ShoppingBag, ImageIcon, X,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -30,24 +29,15 @@ const nav: NavItem[] = [
   { href: "/admin/banners",      icon: ImageIcon,       label: "Banners" },
 ];
 
-const container = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
-};
-
-const item = {
-  hidden: { opacity: 0, x: -16 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } },
-};
-
 interface SidebarProps {
   role: "ADMIN" | "ASISTENTE";
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ role }: SidebarProps) {
+export default function Sidebar({ role, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const isAdmin = role === "ADMIN";
-
   const visibleNav = nav.filter((n) => !n.adminOnly || isAdmin);
 
   function isActive(href: string) {
@@ -56,14 +46,17 @@ export default function Sidebar({ role }: SidebarProps) {
   }
 
   return (
-    <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] }}
-      className="w-60 h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 z-20"
+    <aside
+      className={clsx(
+        "h-screen bg-white border-r border-slate-200 flex flex-col shrink-0 z-40",
+        "fixed md:relative",
+        "w-72 md:w-60",
+        "transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}
     >
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-slate-100">
+      {/* Logo + mobile close */}
+      <div className="px-5 py-5 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <Image
             src={logo}
@@ -84,6 +77,12 @@ export default function Sidebar({ role }: SidebarProps) {
             </p>
           </div>
         </div>
+        <button
+          onClick={onClose}
+          className="md:hidden w-8 h-8 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors"
+        >
+          <X size={16} />
+        </button>
       </div>
 
       {/* Nav */}
@@ -91,33 +90,29 @@ export default function Sidebar({ role }: SidebarProps) {
         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 px-3 mb-2">
           Principal
         </p>
-        <motion.ul variants={container} initial="hidden" animate="visible" className="space-y-0.5">
+        <ul className="space-y-0.5">
           {visibleNav.map(({ href, icon: Icon, label, badge, badgeColor }) => {
             const active = isActive(href);
             return (
-              <motion.li key={href} variants={item}>
-                <Link href={href}>
-                  <motion.div
-                    whileHover={{ x: 2 }}
-                    transition={{ duration: 0.15 }}
+              <li key={href}>
+                <Link href={href} onClick={onClose}>
+                  <div
                     className={clsx(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative group",
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors relative",
                       active
                         ? "text-[var(--brand-rose)]"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     )}
                   >
                     {active && (
-                      <motion.div
-                        layoutId="activeNav"
+                      <span
                         className="absolute inset-0 rounded-xl"
                         style={{ background: "var(--brand-rose-light)", zIndex: -1 }}
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                       />
                     )}
                     <Icon
                       size={17}
-                      className={clsx(!active && "text-slate-400 group-hover:text-slate-600")}
+                      className={clsx(!active && "text-slate-400")}
                       style={active ? { color: "var(--brand-rose)" } : undefined}
                       strokeWidth={active ? 2.5 : 2}
                     />
@@ -137,12 +132,12 @@ export default function Sidebar({ role }: SidebarProps) {
                     {active && (
                       <ChevronRight size={13} style={{ color: "var(--brand-rose)" }} />
                     )}
-                  </motion.div>
+                  </div>
                 </Link>
-              </motion.li>
+              </li>
             );
           })}
-        </motion.ul>
+        </ul>
 
         {isAdmin && (
           <>
@@ -150,14 +145,11 @@ export default function Sidebar({ role }: SidebarProps) {
             <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 px-3 mb-2">
               Configuración
             </p>
-            <Link href="/admin/configuracion">
-              <motion.div
-                whileHover={{ x: 2 }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-              >
+            <Link href="/admin/configuracion" onClick={onClose}>
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
                 <Settings size={17} className="text-slate-400" strokeWidth={2} />
                 Configuración
-              </motion.div>
+              </div>
             </Link>
           </>
         )}
@@ -165,12 +157,9 @@ export default function Sidebar({ role }: SidebarProps) {
 
       {/* User */}
       <div className="px-3 py-3 border-t border-slate-100">
-        <motion.div
-          whileHover={{ backgroundColor: "#F8FAFC" }}
-          className="flex items-center gap-3 p-2.5 rounded-xl cursor-pointer"
-        >
+        <div className="flex items-center gap-3 p-2.5 rounded-xl">
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
             style={{
               background: isAdmin
                 ? "linear-gradient(135deg, var(--brand-rose), var(--brand-rose-dark))"
@@ -185,9 +174,9 @@ export default function Sidebar({ role }: SidebarProps) {
             </p>
             <p className="text-[10px] text-slate-400 truncate">K Moda y Estilo</p>
           </div>
-          <div className="w-2 h-2 rounded-full bg-emerald-400" />
-        </motion.div>
+          <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+        </div>
       </div>
-    </motion.aside>
+    </aside>
   );
 }

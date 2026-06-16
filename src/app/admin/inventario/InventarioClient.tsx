@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Package, AlertTriangle, TrendingUp, X, ArrowDownCircle,
   ArrowUpCircle, SlidersHorizontal, DollarSign, Boxes, FileDown, Loader2, Tag,
-  ImagePlus, Link as LinkIcon, Pencil, Search,
+  ImagePlus, Link as LinkIcon, Pencil, Search, Camera,
 } from "lucide-react";
 import {
   createProductAction, adjustStockAction, createCategoryAction, toggleCategoryAction, updateProductAction,
@@ -82,6 +82,7 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
   const [preview, setPreview] = useState("");
   const [description, setDescription] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [skuValue, setSkuValue] = useState("");
   const [skuLoading, setSkuLoading] = useState(false);
 
@@ -100,8 +101,13 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreview(url);
+    // If came from camera input, copy file to main named input
+    if (e.target !== fileInputRef.current && fileInputRef.current) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInputRef.current.files = dt.files;
+    }
+    setPreview(URL.createObjectURL(file));
   }
 
   function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -111,6 +117,7 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
   function clearImage() {
     setPreview("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   }
 
   return (
@@ -193,19 +200,40 @@ function ProductModal({ categories, skuPrefixes, onClose }: { categories: Catego
                       className="hidden"
                       id="imageFileInput"
                     />
-                    <label
-                      htmlFor="imageFileInput"
-                      className="flex flex-col items-center justify-center w-full h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)] transition-all cursor-pointer text-center"
-                    >
-                      {preview ? (
-                        <span className="text-xs text-emerald-600 font-semibold">Imagen seleccionada ✓</span>
-                      ) : (
-                        <>
-                          <span className="text-xs font-semibold text-slate-500">Clic para seleccionar</span>
-                          <span className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WEBP</span>
-                        </>
-                      )}
-                    </label>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="imageCameraInput"
+                    />
+                    {preview ? (
+                      <div className="flex items-center gap-2 w-full px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50">
+                        <span className="text-xs text-emerald-600 font-semibold flex-1">Imagen seleccionada ✓</span>
+                        <button type="button" onClick={clearImage} className="text-slate-400 hover:text-rose-500 transition-colors">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 w-full">
+                        <label
+                          htmlFor="imageFileInput"
+                          className="flex-1 flex flex-col items-center justify-center h-16 rounded-xl border-2 border-dashed border-slate-200 hover:border-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)] transition-all cursor-pointer text-center"
+                        >
+                          <ImagePlus size={16} className="text-slate-400 mb-1" />
+                          <span className="text-[10px] font-semibold text-slate-500">Galería</span>
+                        </label>
+                        <label
+                          htmlFor="imageCameraInput"
+                          className="flex-1 flex flex-col items-center justify-center h-16 rounded-xl border-2 border-dashed border-slate-200 hover:border-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)] transition-all cursor-pointer text-center"
+                        >
+                          <Camera size={16} className="text-slate-400 mb-1" />
+                          <span className="text-[10px] font-semibold text-slate-500">Cámara</span>
+                        </label>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="flex flex-col gap-1 h-20 justify-center">
@@ -335,6 +363,7 @@ function ProductEditModal({
   const [description, setDescription] = useState(product.description || "");
   const [imageUrl, setImageUrl] = useState(product.image || "");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (saveState?.success) onClose();
@@ -343,6 +372,11 @@ function ProductEditModal({
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (e.target !== fileInputRef.current && fileInputRef.current) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInputRef.current.files = dt.files;
+    }
     setPreview(URL.createObjectURL(file));
   }
 
@@ -444,13 +478,31 @@ function ProductEditModal({
                       className="hidden"
                       id="editImageFileInput"
                     />
-                    <label
-                      htmlFor="editImageFileInput"
-                      className="flex flex-col items-center justify-center w-full h-20 rounded-xl border-2 border-dashed border-slate-200 hover:border-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)] transition-all cursor-pointer text-center"
-                    >
-                      <span className="text-xs font-semibold text-slate-500">Seleccionar nueva imagen</span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WEBP</span>
-                    </label>
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="editImageCameraInput"
+                    />
+                    <div className="flex gap-2 h-20">
+                      <label
+                        htmlFor="editImageFileInput"
+                        className="flex-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 hover:border-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)] transition-all cursor-pointer text-center"
+                      >
+                        <ImagePlus size={16} className="text-slate-400 mb-1" />
+                        <span className="text-[10px] font-semibold text-slate-500">Galería</span>
+                      </label>
+                      <label
+                        htmlFor="editImageCameraInput"
+                        className="flex-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 hover:border-[var(--brand-rose)] hover:bg-[var(--brand-rose-light)] transition-all cursor-pointer text-center"
+                      >
+                        <Camera size={16} className="text-slate-400 mb-1" />
+                        <span className="text-[10px] font-semibold text-slate-500">Cámara</span>
+                      </label>
+                    </div>
                   </>
                 )}
               </div>

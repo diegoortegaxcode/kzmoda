@@ -77,17 +77,21 @@ function CreateModal({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/30 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
-        initial={{ scale: 0.95, y: 12 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.95, y: 12 }}
-        transition={{ duration: 0.18 }}
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ duration: 0.25 }}
+        className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[95svh] sm:max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="sm:hidden flex justify-center pt-3 pb-1">
+          <div className="w-10 h-1 rounded-full bg-slate-200" />
+        </div>
+        <div className="p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold text-slate-900">Nuevo usuario</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
@@ -164,6 +168,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         </form>
+        </div>
       </motion.div>
     </motion.div>
   );

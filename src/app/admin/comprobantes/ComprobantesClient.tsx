@@ -362,7 +362,7 @@ export default function ComprobantesClient({ proofs: initial }: { proofs: ProofR
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm p-4 flex items-center justify-center"
+            className="fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm sm:p-4 flex items-end sm:items-center justify-center"
             onClick={() => setPreviewImage(null)}
           >
             <motion.div
@@ -370,7 +370,7 @@ export default function ComprobantesClient({ proofs: initial }: { proofs: ProofR
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.96, opacity: 0 }}
               transition={{ duration: 0.16 }}
-              className="max-w-4xl w-full bg-white rounded-2xl overflow-hidden border border-slate-200"
+              className="max-w-4xl w-full bg-white rounded-t-2xl sm:rounded-2xl overflow-hidden border border-slate-200 max-h-[95svh] sm:max-h-none flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">

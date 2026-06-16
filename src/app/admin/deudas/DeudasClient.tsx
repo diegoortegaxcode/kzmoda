@@ -34,7 +34,7 @@ function PaymentModal({ debt, onClose }: { debt: DebtDetail; onClose: () => void
       <motion.div
         initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 220 }}
-        className="w-full max-w-sm bg-white shadow-2xl flex flex-col"
+        className="w-full sm:max-w-sm bg-white shadow-2xl flex flex-col"
       >
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100">

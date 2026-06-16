@@ -38,9 +38,9 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Banners del Home</h1>
           <p className="text-sm text-slate-500 mt-0.5">
@@ -51,7 +51,7 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold self-start sm:self-auto"
           style={{ background: "var(--brand-rose)" }}
         >
           <Plus size={15} />
@@ -66,16 +66,20 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4"
             onClick={(e) => e.target === e.currentTarget && setShowForm(false)}
           >
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.97 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.25 }}
+              className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg overflow-hidden max-h-[95svh] sm:max-h-[92vh] flex flex-col"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <div className="sm:hidden flex justify-center pt-3 pb-1 shrink-0">
+                <div className="w-10 h-1 rounded-full bg-slate-200" />
+              </div>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
                 <h2 className="text-base font-semibold text-slate-900">Subir banner</h2>
                 <button
                   onClick={() => setShowForm(false)}
@@ -224,9 +228,9 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
               transition={{ delay: i * 0.05 }}
               className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
             >
-              <div className="flex items-stretch">
+              <div className="flex flex-col sm:flex-row sm:items-stretch">
                 {/* Image preview */}
-                <div className="relative w-48 shrink-0 bg-slate-100" style={{ minHeight: 88 }}>
+                <div className="relative w-full h-36 sm:w-48 sm:h-auto shrink-0 bg-slate-100">
                   <Image
                     src={banner.imageUrl}
                     alt={banner.title ?? "Banner"}
@@ -245,7 +249,7 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 px-5 py-4 flex items-center justify-between gap-4">
+                <div className="flex-1 px-4 py-3 sm:px-5 sm:py-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-900 truncate">
                       {banner.title ?? <span className="text-slate-400 font-normal italic">Sin título</span>}

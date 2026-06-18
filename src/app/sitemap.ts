@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kztendencias.com";
 
   try {
     const products = await db.product.findMany({

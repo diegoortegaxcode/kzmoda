@@ -10,33 +10,33 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kztendencias.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(base),
   title: {
-    default: "K Moda y Estilo — Moda femenina con elegancia",
-    template: "%s — K Moda y Estilo",
+    default: "KZ Tendencias — Moda femenina con elegancia",
+    template: "%s — KZ Tendencias",
   },
-  description: "Descubre la colección exclusiva de K Moda y Estilo. Moda femenina con calidad garantizada y entrega rápida.",
-  keywords: ["moda", "ropa", "estilo", "moda femenina", "K Moda", "vestidos", "blusas", "Lima", "Perú"],
-  authors: [{ name: "K Moda y Estilo" }],
-  creator: "K Moda y Estilo",
+  description: "Descubre la colección exclusiva de KZ Tendencias. Moda femenina con calidad garantizada y entrega rápida.",
+  keywords: ["moda", "ropa", "estilo", "moda femenina", "KZ Tendencias", "vestidos", "blusas", "Lima", "Perú"],
+  authors: [{ name: "KZ Tendencias" }],
+  creator: "KZ Tendencias",
   icons: {
     icon: "/favicon.jpg",
     apple: "/favicon.jpg",
   },
   openGraph: {
-    title: "K Moda y Estilo — Moda femenina con elegancia",
-    description: "Descubre la colección exclusiva de K Moda y Estilo. Moda femenina con calidad garantizada y entrega rápida.",
+    title: "KZ Tendencias — Moda femenina con elegancia",
+    description: "Descubre la colección exclusiva de KZ Tendencias. Moda femenina con calidad garantizada y entrega rápida.",
     url: base,
-    siteName: "K Moda y Estilo",
+    siteName: "KZ Tendencias",
     locale: "es_PE",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "K Moda y Estilo",
+    title: "KZ Tendencias",
     description: "Moda femenina con elegancia y calidad garantizada.",
   },
   alternates: { canonical: base },

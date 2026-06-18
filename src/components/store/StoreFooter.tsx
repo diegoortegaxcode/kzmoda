@@ -15,7 +15,7 @@ export default function StoreFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <div>
             <h3 className="text-xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: "var(--brand-black)" }}>
-              KZ Moda y Estilo
+              KZ Tendencias
             </h3>
             <p className="text-sm text-slate-500 leading-relaxed mt-3">
               Moda femenina con curaduría premium, entregas rápidas y atención personalizada.
@@ -47,7 +47,7 @@ export default function StoreFooter() {
             <h4 className="text-sm font-bold uppercase tracking-widest text-slate-800">Contacto</h4>
             <ul className="mt-4 space-y-3 text-sm text-slate-500">
               <li className="flex items-center gap-2"><Phone size={14} /> +51 999 999 999</li>
-              <li className="flex items-center gap-2"><Mail size={14} /> ventas@kzmoda.pe</li>
+              <li className="flex items-center gap-2"><Mail size={14} /> ventas@kztendencias.pe</li>
               <li className="flex items-center gap-2"><MapPin size={14} /> Lima, Perú</li>
             </ul>
           </div>
@@ -74,7 +74,7 @@ export default function StoreFooter() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} KZ Moda y Estilo. Todos los derechos reservados.</p>
+          <p>© {new Date().getFullYear()} KZ Tendencias. Todos los derechos reservados.</p>
           <p>Diseño profesional · Experiencia premium · Compra segura</p>
         </div>
       </div>

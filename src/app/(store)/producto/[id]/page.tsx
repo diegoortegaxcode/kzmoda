@@ -18,24 +18,24 @@ interface ProductDetailPageProps {
 
 export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kztendencias.com";
 
   const product = await db.product.findUnique({
     where: { id, active: true },
     select: { name: true, description: true, price: true, images: true, category: { select: { name: true } } },
   });
 
-  if (!product) return { title: "Producto no encontrado — K Moda y Estilo" };
+  if (!product) return { title: "Producto no encontrado — KZ Tendencias" };
 
-  const plainDesc = toPlainDescription(product.description) || `${product.name} en K Moda y Estilo. Moda femenina con calidad garantizada.`;
+  const plainDesc = toPlainDescription(product.description) || `${product.name} en KZ Tendencias. Moda femenina con calidad garantizada.`;
   const image = product.images[0] ?? null;
 
   return {
-    title: `${product.name} — K Moda y Estilo`,
+    title: `${product.name} — KZ Tendencias`,
     description: plainDesc.slice(0, 160),
     alternates: { canonical: `${base}/producto/${id}` },
     openGraph: {
-      title: `${product.name} — K Moda y Estilo`,
+      title: `${product.name} — KZ Tendencias`,
       description: plainDesc.slice(0, 160),
       url: `${base}/producto/${id}`,
       type: "website",
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { id } = await params;
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kztendencias.com";
 
   const product = await db.product.findUnique({
     where: { id, active: true },
@@ -84,7 +84,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   const safeDescription = normalizeDescriptionForRender(product.description ?? "");
   const hasRichDescription = safeDescription.length > 0;
-  const plainDesc = toPlainDescription(product.description) || `${product.name} en K Moda y Estilo.`;
+  const plainDesc = toPlainDescription(product.description) || `${product.name} en KZ Tendencias.`;
   const heroImage = product.images[0] || "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=80";
 
   const jsonLd = {
@@ -100,9 +100,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       priceCurrency: "PEN",
       price: Number(product.price).toFixed(2),
       availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      seller: { "@type": "Organization", name: "K Moda y Estilo" },
+      seller: { "@type": "Organization", name: "KZ Tendencias" },
     },
-    brand: { "@type": "Brand", name: "K Moda y Estilo" },
+    brand: { "@type": "Brand", name: "KZ Tendencias" },
     category: product.category.name,
   };
 

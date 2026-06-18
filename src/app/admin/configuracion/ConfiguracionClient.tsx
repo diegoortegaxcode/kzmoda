@@ -120,7 +120,7 @@ export default function ConfiguracionClient({
             label="Nombre de la tienda"
             name="name"
             defaultValue={settings.name}
-            placeholder="K Moda y Estilo"
+            placeholder="KZ Tendencias"
           />
           <Field
             label="WhatsApp"
@@ -141,7 +141,7 @@ export default function ConfiguracionClient({
             label="Instagram"
             name="instagram"
             defaultValue={settings.instagram}
-            placeholder="@kmodayestilo"
+            placeholder="@kztendencias"
             icon={Instagram}
           />
           <Field

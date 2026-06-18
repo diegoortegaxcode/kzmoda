@@ -16,9 +16,9 @@ export default function CustomerNav({ name }: { name: string }) {
     <header className="bg-white border-b border-rose-100 sticky top-0 z-40">
       <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Image src={logo} alt="KZ Moda" width={32} height={32} className="rounded-lg object-cover" />
+          <Image src={logo} alt="KZ Tendencias" width={32} height={32} className="rounded-lg object-cover" />
           <span className="text-sm font-bold hidden sm:block" style={{ fontFamily: "var(--font-playfair)" }}>
-            KZ Moda
+            KZ Tendencias
           </span>
         </Link>
 

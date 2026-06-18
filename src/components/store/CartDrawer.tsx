@@ -15,7 +15,7 @@ function buildWhatsAppMessage(items: ReturnType<typeof useCart>["items"], total:
   });
 
   return [
-    "¡Hola! Quiero realizar un pedido de *K Moda y Estilo* 🌸",
+    "¡Hola! Quiero realizar un pedido de *KZ Tendencias* 🌸",
     "",
     ...lines,
     "",
@@ -72,7 +72,7 @@ export default function CartDrawer() {
                     Tu Carrito
                   </h2>
                   <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
-                    K Moda y Estilo
+                    KZ Tendencias
                   </p>
                 </div>
               </div>

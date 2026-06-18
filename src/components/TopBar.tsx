@@ -1,19 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, Bell, Plus, LogOut, CheckCircle2, Menu } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Search, Bell, Plus, LogOut, CheckCircle2 } from "lucide-react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { logoutAction } from "@/app/login/actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface TopBarProps {
   userName?: string;
   userRole?: "ADMIN" | "ASISTENTE";
-  onMenuOpen?: () => void;
 }
 
-export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) {
+export default function TopBar({ userName, userRole }: TopBarProps) {
   const [focused, setFocused] = useState(false);
+  const [, startTransition] = useTransition();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,10 @@ export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) 
     () => results.customers.length > 0 || results.products.length > 0,
     [results]
   );
+
+  function handleLogout() {
+    startTransition(() => logoutAction());
+  }
 
   useEffect(() => {
     let active = true;
@@ -136,22 +141,15 @@ export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) 
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.15 }}
-      className="relative h-14 bg-white border-b border-slate-200 flex items-center gap-2 px-4 sm:px-6 shrink-0"
+      className="relative h-14 bg-white border-b border-slate-200 flex items-center gap-4 px-6 shrink-0"
     >
-      {/* Hamburger – mobile only */}
-      <button
-        onClick={onMenuOpen}
-        className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 transition-colors shrink-0"
-        aria-label="Abrir menú"
-      >
-        <Menu size={18} strokeWidth={2} />
-      </button>
+      {/* Logo */}
 
-      {/* Search – hidden on mobile */}
+      {/* Search */}
       <motion.div
         animate={{ width: focused ? 320 : 240 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="relative hidden sm:block"
+        className="relative"
       >
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" strokeWidth={2} />
         <input
@@ -229,10 +227,10 @@ export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) 
       >
         <Link
           href="/admin/pedidos/nuevo"
-          className="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <Plus size={14} strokeWidth={2.5} />
-          <span className="hidden sm:inline">Nuevo </span>Pedido
+          Nuevo Pedido
         </Link>
       </motion.div>
 
@@ -321,17 +319,15 @@ export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) 
             <p className="text-xs font-semibold text-slate-800 leading-tight">{userName}</p>
             <p className="text-[10px] text-slate-400">{userRole === "ADMIN" ? "Administrador" : "Asistente"}</p>
           </div>
-          <form method="POST" action="/api/auth/logout">
-            <motion.button
-              type="submit"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title="Cerrar sesión"
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors"
-            >
-              <LogOut size={15} strokeWidth={2} />
-            </motion.button>
-          </form>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleLogout}
+            title="Cerrar sesión"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors"
+          >
+            <LogOut size={15} strokeWidth={2} />
+          </motion.button>
         </div>
       )}
     </motion.header>

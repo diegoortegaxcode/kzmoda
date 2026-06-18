@@ -267,7 +267,7 @@ enum ProofStatus {
 
 model StoreSettings {
   id             String   @id @default("singleton")
-  name           String   @default("K Moda y Estilo")
+  name           String   @default("KZ Tendencias")
   whatsapp       String   @default("992 032 988")
   address        String   @default("")
   instagram      String   @default("")

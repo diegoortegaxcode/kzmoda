@@ -95,7 +95,7 @@ async function fetchImgBase64(url: string): Promise<{ data: string; format: stri
       signal: ctrl.signal,
       headers: {
         Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-        "User-Agent": "Mozilla/5.0 (compatible; KModaCatalog/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; KZTendenciasCatalog/1.0)",
       },
     });
     clearTimeout(t);
@@ -437,7 +437,7 @@ export async function GET() {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="catalogo-kmoda-${Date.now()}.pdf"`,
+      "Content-Disposition": `attachment; filename="catalogo-kztendencias-${Date.now()}.pdf"`,
       "Cache-Control": "no-store",
     },
   });

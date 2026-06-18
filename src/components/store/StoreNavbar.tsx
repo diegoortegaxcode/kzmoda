@@ -51,7 +51,7 @@ export default function StoreNavbar({ customer }: { customer?: CustomerInfo | nu
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <Image
               src={logo}
-              alt="KZ Moda y Estilo"
+              alt="KZ Tendencias"
               width={40}
               height={40}
               className="rounded-xl object-cover"
@@ -60,9 +60,7 @@ export default function StoreNavbar({ customer }: { customer?: CustomerInfo | nu
               className="text-sm font-bold hidden sm:block tracking-wide"
               style={{ fontFamily: "var(--font-playfair)", color: "var(--brand-black)" }}
             >
-              KZ Moda{" "}
-              <span style={{ color: "var(--brand-rose)" }}>y</span>{" "}
-              Estilo
+              KZ Tendencias
             </span>
           </Link>
 

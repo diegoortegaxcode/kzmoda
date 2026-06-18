@@ -60,7 +60,7 @@ export default function Sidebar({ role, isOpen = false, onClose }: SidebarProps)
         <div className="flex items-center gap-2.5">
           <Image
             src={logo}
-            alt="K Moda y Estilo"
+            alt="KZ Tendencias"
             width={32}
             height={32}
             className="rounded-xl object-cover"
@@ -70,7 +70,7 @@ export default function Sidebar({ role, isOpen = false, onClose }: SidebarProps)
               className="text-sm font-bold leading-none"
               style={{ fontFamily: "var(--font-playfair)", color: "var(--brand-black)" }}
             >
-              K Moda
+              KZ Tendencias
             </p>
             <p className="text-[10px] text-slate-400 mt-0.5 uppercase tracking-widest">
               {isAdmin ? "Administrador" : "Asistente"}
@@ -172,7 +172,7 @@ export default function Sidebar({ role, isOpen = false, onClose }: SidebarProps)
             <p className="text-xs font-semibold text-slate-900 truncate">
               {isAdmin ? "Administrador" : "Asistente"}
             </p>
-            <p className="text-[10px] text-slate-400 truncate">K Moda y Estilo</p>
+            <p className="text-[10px] text-slate-400 truncate">KZ Tendencias</p>
           </div>
           <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
         </div>

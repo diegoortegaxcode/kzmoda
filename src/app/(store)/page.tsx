@@ -10,10 +10,10 @@ import { toPlainDescription } from "@/lib/product-description";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "K Moda y Estilo — Moda femenina con elegancia",
+  title: "KZ Tendencias — Moda femenina con elegancia",
   description: "Descubre nuestra colección exclusiva de moda femenina. Prendas de calidad con precios directos y entrega rápida en Lima, Perú.",
   alternates: {
-    canonical: process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com",
+    canonical: process.env.NEXT_PUBLIC_SITE_URL ?? "https://kztendencias.com",
   },
 };
 
@@ -47,12 +47,12 @@ async function getData(): Promise<{ products: StoreProduct[]; categories: StoreC
   };
 }
 
-const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kmodayestilo.com";
+const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kztendencias.com";
 
 const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "ClothingStore",
-  name: "K Moda y Estilo",
+  name: "KZ Tendencias",
   url: base,
   description: "Tienda de moda femenina con calidad garantizada y entrega rápida.",
   address: { "@type": "PostalAddress", addressCountry: "PE" },

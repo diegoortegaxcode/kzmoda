@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, Bell, Plus, LogOut, CheckCircle2 } from "lucide-react";
+import { Search, Bell, Plus, LogOut, CheckCircle2, Menu } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { logoutAction } from "@/app/login/actions";
 import Link from "next/link";
@@ -10,9 +10,10 @@ import { useRouter } from "next/navigation";
 interface TopBarProps {
   userName?: string;
   userRole?: "ADMIN" | "ASISTENTE";
+  onMenuOpen?: () => void;
 }
 
-export default function TopBar({ userName, userRole }: TopBarProps) {
+export default function TopBar({ userName, userRole, onMenuOpen }: TopBarProps) {
   const [focused, setFocused] = useState(false);
   const [, startTransition] = useTransition();
   const router = useRouter();
@@ -143,7 +144,15 @@ export default function TopBar({ userName, userRole }: TopBarProps) {
       transition={{ duration: 0.4, delay: 0.15 }}
       className="relative h-14 bg-white border-b border-slate-200 flex items-center gap-4 px-6 shrink-0"
     >
-      {/* Logo */}
+      {/* Hamburger – mobile only */}
+      {onMenuOpen && (
+        <button
+          onClick={onMenuOpen}
+          className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
+        >
+          <Menu size={18} />
+        </button>
+      )}
 
       {/* Search */}
       <motion.div

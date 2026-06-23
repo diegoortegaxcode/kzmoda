@@ -109,10 +109,12 @@ export default function StoreNavbar({ customer }: { customer?: CustomerInfo | nu
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-rose-50 text-slate-500 hover:text-[var(--brand-rose)] transition-colors"
-                  title="Mi cuenta"
+                  className="flex items-center gap-1.5 h-9 px-2.5 sm:px-3.5 rounded-xl text-white text-xs sm:text-sm font-semibold shadow-sm transition-colors"
+                  style={{ background: "var(--brand-rose)" }}
+                  title="Iniciar sesión o registrarme"
                 >
-                  <User size={17} strokeWidth={2} />
+                  <User size={16} strokeWidth={2.2} />
+                  <span>Ingresar</span>
                 </motion.div>
               </Link>
             )}
@@ -197,11 +199,44 @@ export default function StoreNavbar({ customer }: { customer?: CustomerInfo | nu
                   <a
                     key={link.label}
                     href={link.href}
+                    onClick={() => setMenuOpen(false)}
                     className="px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-rose-50 hover:text-[var(--brand-rose)] rounded-xl transition-colors"
                   >
                     {link.label}
                   </a>
                 ))}
+
+                <div className="my-1 h-px bg-rose-100" />
+
+                {customer ? (
+                  <Link
+                    href="/cuenta/pedidos"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-rose-50 hover:text-[var(--brand-rose)] rounded-xl transition-colors"
+                  >
+                    <User size={16} strokeWidth={2} />
+                    Mi cuenta
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/cuenta/login"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-bold text-white rounded-xl transition-opacity hover:opacity-90"
+                      style={{ background: "var(--brand-rose)" }}
+                    >
+                      <User size={16} strokeWidth={2.2} />
+                      Iniciar sesión
+                    </Link>
+                    <Link
+                      href="/cuenta/registro"
+                      onClick={() => setMenuOpen(false)}
+                      className="px-3 py-2.5 text-center text-sm font-semibold text-[var(--brand-rose)] hover:bg-rose-50 rounded-xl transition-colors"
+                    >
+                      Crear una cuenta
+                    </Link>
+                  </>
+                )}
               </nav>
             </motion.div>
           )}

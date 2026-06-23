@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Package, AlertTriangle, TrendingUp, X, ArrowDownCircle,
   ArrowUpCircle, SlidersHorizontal, DollarSign, Boxes, FileDown, Loader2, Tag,
-  ImagePlus, Link as LinkIcon, Pencil, Search, Camera,
+  ImagePlus, Link as LinkIcon, Pencil, Search, Camera, Clock, Printer,
 } from "lucide-react";
 import {
   createProductAction, adjustStockAction, createCategoryAction, toggleCategoryAction, updateProductAction,
@@ -26,6 +26,18 @@ function stockChip(stock: number, min: number) {
   if (stock === 0) return { label: "Sin stock", bg: "bg-rose-100", text: "text-rose-700" };
   if (stock <= min) return { label: "Stock bajo", bg: "bg-amber-100", text: "text-amber-700" };
   return { label: "En stock", bg: "bg-emerald-100", text: "text-emerald-700" };
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleString("es-PE", {
+    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+  );
 }
 
 function marginColor(pct: number) {
@@ -799,6 +811,84 @@ function StockModal({ product, onClose }: { product: ProductRow; onClose: () => 
 
 // ─── Category Modal ───────────────────────────────────────────────────────────
 
+function RecentModal({
+  products,
+  onPrint,
+  onClose,
+}: {
+  products: ProductRow[];
+  onPrint: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[200] flex">
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="flex-1 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 220 }}
+        className="w-full sm:max-w-md bg-white shadow-2xl flex flex-col"
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--brand-rose-light)" }}>
+              <Clock size={18} style={{ color: "var(--brand-rose)" }} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900" style={{ fontFamily: "var(--font-playfair)" }}>Últimos cargados</p>
+              <p className="text-[10px] text-slate-400">Ordenados del más nuevo al más antiguo</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Print action */}
+        <div className="px-6 py-3 border-b border-slate-100">
+          <button
+            onClick={onPrint}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
+            style={{ background: "var(--brand-rose)" }}
+          >
+            <Printer size={16} />
+            Imprimir / Exportar lista
+          </button>
+          <p className="text-[10px] text-slate-400 mt-2 text-center">
+            Se abre la vista de impresión: puedes imprimir o guardar como PDF.
+          </p>
+        </div>
+
+        {/* List */}
+        <div className="flex-1 overflow-y-auto px-3 py-3">
+          {products.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-10">No hay productos cargados.</p>
+          ) : (
+            <ol className="space-y-1.5">
+              {products.map((p, i) => (
+                <li key={p.id} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 transition-colors">
+                  <span className="w-6 text-xs font-bold text-slate-300 shrink-0">{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{p.name}</p>
+                    <p className="text-[11px] text-slate-400">
+                      {p.sku} · {p.category} · {formatDate(p.createdAt)}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-slate-700 shrink-0">S/ {p.price.toFixed(2)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function CategoryModal({ allCategories, onClose }: { allCategories: CategoryRow[]; onClose: () => void }) {
   const [state, formAction, pending] = useActionState<ActionResult, FormData>(createCategoryAction, null);
   const [, startTransition] = useTransition();
@@ -920,6 +1010,7 @@ export default function InventarioClient({
   const searchParams = useSearchParams();
   const [showAdd, setShowAdd] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [showRecent, setShowRecent] = useState(false);
   const [adjusting, setAdjusting] = useState<ProductRow | null>(null);
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [downloading, setDownloading] = useState(false);
@@ -959,6 +1050,57 @@ export default function InventarioClient({
     } finally {
       setDownloading(false);
     }
+  }
+
+  const recentProducts = [...products].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  function handlePrintRecent() {
+    const rows = recentProducts
+      .map(
+        (p, i) => `
+        <tr>
+          <td class="num">${i + 1}</td>
+          <td>${escapeHtml(p.sku)}</td>
+          <td>${escapeHtml(p.name)}</td>
+          <td>${escapeHtml(p.category)}</td>
+          <td class="num">${p.stock}</td>
+          <td class="num">S/ ${p.price.toFixed(2)}</td>
+          <td>${escapeHtml(formatDate(p.createdAt))}</td>
+        </tr>`
+      )
+      .join("");
+    const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+      <title>Últimos productos cargados — KZ Tendencias</title>
+      <style>
+        * { font-family: Arial, Helvetica, sans-serif; }
+        body { padding: 24px; color: #1e293b; }
+        h1 { font-size: 18px; margin: 0 0 2px; }
+        p.sub { font-size: 12px; color: #64748b; margin: 0 0 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+        th { background: #fce7f3; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+        td.num, th.num { text-align: right; }
+        tr:nth-child(even) td { background: #fafafa; }
+        @media print { @page { margin: 14mm; } }
+      </style></head><body>
+      <h1>Últimos productos cargados</h1>
+      <p class="sub">KZ Tendencias · ${escapeHtml(formatDate(new Date().toISOString()))} · ${recentProducts.length} productos</p>
+      <table>
+        <thead><tr>
+          <th class="num">#</th><th>SKU</th><th>Producto</th><th>Categoría</th>
+          <th class="num">Stock</th><th class="num">Precio</th><th>Cargado</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </body></html>`;
+    const w = window.open("", "_blank", "width=960,height=720");
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 200);
   }
 
   const totalProducts = products.length;
@@ -1007,6 +1149,15 @@ export default function InventarioClient({
               <span className="hidden sm:inline">{downloading ? "Generando…" : "Catálogo "}</span>
               <span className="sm:hidden">{downloading ? "…" : ""}</span>
               PDF
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowRecent(true)}
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm font-semibold border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all"
+            >
+              <Clock size={15} />
+              <span className="hidden sm:inline">Recientes</span>
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.03 }}
@@ -1226,6 +1377,14 @@ export default function InventarioClient({
             key="category-modal"
             allCategories={allCategories}
             onClose={() => setShowCategories(false)}
+          />
+        )}
+        {showRecent && (
+          <RecentModal
+            key="recent-modal"
+            products={recentProducts}
+            onPrint={handlePrintRecent}
+            onClose={() => setShowRecent(false)}
           />
         )}
         {showAdd && (

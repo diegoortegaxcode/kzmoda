@@ -11,7 +11,9 @@ export default function RichTextEditor({
   onChange: (value: string) => void;
   placeholder?: string;
 }) {
-  const plainText = useMemo(() => value.replace(/<[^>]*>/g, "").trim(), [value]);
+  // No usar .trim() aquí: recortaba el espacio final en cada tecla, por eso la
+  // barra espaciadora "no se habilitaba" al escribir la descripción.
+  const plainText = useMemo(() => value.replace(/<[^>]*>/g, ""), [value]);
 
   return (
     <div className="rounded-xl overflow-hidden border border-slate-200 focus-within:border-[var(--brand-rose)] focus-within:ring-2 focus-within:ring-[var(--brand-rose)]/20 transition">

@@ -22,6 +22,7 @@ export type ProductRow = {
   categoryId: string;
   category: string;
   image: string;
+  createdAt: string;
 };
 
 export type CategoryOption = { id: string; name: string };
@@ -84,6 +85,7 @@ export async function fetchInventario() {
     categoryId: p.categoryId,
     category: p.category.name,
     image: p.images[0] ?? "",
+    createdAt: p.createdAt.toISOString(),
   }));
 
   return { products, categories, allCategories, skuPrefixes: settings.skuPrefixes };

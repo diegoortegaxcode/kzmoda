@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ShoppingCart, Search, Filter } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
@@ -16,15 +16,25 @@ export default function ProductGrid({ products, categories }: ProductGridProps) 
   const { add } = useCart();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const PAGE_SIZE = 8;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchesCategory = selectedCategory === "all" || p.categorySlug === selectedCategory;
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            p.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
   }, [products, selectedCategory, searchQuery]);
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedCategory, searchQuery]);
+
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const hasMore = filteredProducts.length > visibleCount;
 
   return (
     <section id="productos" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -74,7 +84,7 @@ export default function ProductGrid({ products, categories }: ProductGridProps) 
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
       >
         <AnimatePresence mode="popLayout">
-          {filteredProducts.map((product) => (
+          {visibleProducts.map((product) => (
             <motion.div
               key={product.id}
               layout
@@ -142,6 +152,18 @@ export default function ProductGrid({ products, categories }: ProductGridProps) 
           ))}
         </AnimatePresence>
       </motion.div>
+
+      {hasMore && (
+        <div className="flex justify-center mt-12">
+          <button
+            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+            type="button"
+            className="px-8 py-3 rounded-full text-sm font-semibold bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all"
+          >
+            Mostrar más
+          </button>
+        </div>
+      )}
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-20">

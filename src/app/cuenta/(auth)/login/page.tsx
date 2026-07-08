@@ -16,6 +16,7 @@ function CustomerLoginForm() {
   const searchParams = useSearchParams();
   const errorKey = searchParams.get("error");
   const errorMsg = errorKey ? (errorMessages[errorKey] ?? "Error al iniciar sesión.") : null;
+  const resetOk = searchParams.get("reset") === "ok";
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-rose-50/40">
@@ -39,6 +40,16 @@ function CustomerLoginForm() {
         </div>
 
         <div className="bg-white rounded-2xl p-7 shadow-sm border border-rose-100">
+          {resetOk && (
+            <motion.p
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs px-3 py-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 mb-4"
+            >
+              Contraseña actualizada. Ya puedes iniciar sesión.
+            </motion.p>
+          )}
+
           <form method="POST" action="/api/auth/unified" className="space-y-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -75,6 +86,12 @@ function CustomerLoginForm() {
                   {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
+              <Link
+                href="/cuenta/recuperar"
+                className="text-xs font-semibold text-rose-500 hover:text-rose-600 self-end mt-1"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
             </div>
 
             {errorMsg && (

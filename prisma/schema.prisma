@@ -23,6 +23,7 @@ model User {
   stockMovements StockMovement[]
   reviewedProofs PaymentProof[]  @relation("ProofReviewer")
   notificationReads NotificationRead[]
+  passwordResets PasswordResetToken[]
 
   @@map("users")
 }
@@ -66,11 +67,32 @@ model Product {
   category       Category        @relation(fields: [categoryId], references: [id])
   orderItems     OrderItem[]
   stockMovements StockMovement[]
+  promotions     Promotion[]
 
   @@index([categoryId])
   @@index([active])
   @@index([stock])
   @@map("products")
+}
+
+// ─── Promotions (descuentos temporales por producto) ──────────────────────────
+
+model Promotion {
+  id              String   @id @default(cuid())
+  productId       String   @map("product_id")
+  discountPercent Int      @map("discount_percent")
+  startsAt        DateTime @default(now()) @map("starts_at")
+  endsAt          DateTime @map("ends_at")
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([active])
+  @@index([endsAt])
+  @@map("promotions")
 }
 
 // ─── Stock movements ──────────────────────────────────────────────────────────
@@ -116,12 +138,30 @@ model Customer {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  orders        Order[]
-  debts         Debt[]
-  paymentProofs PaymentProof[]
+  orders         Order[]
+  debts          Debt[]
+  paymentProofs  PaymentProof[]
+  passwordResets PasswordResetToken[]
 
   @@index([active])
   @@map("customers")
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  customerId String?   @map("customer_id")
+  userId     String?   @map("user_id")
+  tokenHash  String    @unique @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  usedAt     DateTime? @map("used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 // ─── Orders (sin pasarela) ────────────────────────────────────────────────────

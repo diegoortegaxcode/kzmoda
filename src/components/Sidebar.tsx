@@ -2,7 +2,7 @@
 
 import {
   LayoutDashboard, Warehouse, Users, CreditCard,
-  Settings, ChevronRight, FileCheck, ShoppingBag, ImageIcon, X,
+  Settings, ChevronRight, FileCheck, ShoppingBag, ImageIcon, Tag, X,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,6 +27,7 @@ const nav: NavItem[] = [
   { href: "/admin/deudas",       icon: CreditCard,      label: "Deudas",       badgeColor: "rose" },
   { href: "/admin/comprobantes", icon: FileCheck,       label: "Comprobantes", badgeColor: "rose" },
   { href: "/admin/banners",      icon: ImageIcon,       label: "Banners" },
+  { href: "/admin/promociones",  icon: Tag,             label: "Promociones" },
 ];
 
 interface SidebarProps {

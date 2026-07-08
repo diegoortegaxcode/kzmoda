@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJWT } from "@/lib/jwt";
 
-const CUSTOMER_PUBLIC = ["/cuenta/login", "/cuenta/registro"];
+const CUSTOMER_PUBLIC = ["/cuenta/login", "/cuenta/registro", "/cuenta/recuperar", "/cuenta/restablecer"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

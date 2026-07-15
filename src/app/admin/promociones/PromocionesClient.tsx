@@ -13,11 +13,26 @@ function round2(n: number) {
   return Math.round(n * 100) / 100;
 }
 
-// ISO string -> value for <input type="datetime-local"> in local time
+// Perú usa UTC-5 fijo todo el año (sin horario de verano). Fijamos la zona
+// para que las horas no dependan del navegador de quien las cargue o vea.
+const PERU_TZ = "America/Lima";
+const PERU_OFFSET = "-05:00";
+
+// ISO (UTC) -> valor "YYYY-MM-DDTHH:mm" en hora de Perú para <input datetime-local>
 function toLocalInput(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PERU_TZ, hour12: false,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit",
+  }).formatToParts(new Date(iso));
+  const g = (t: string) => parts.find((p) => p.type === t)!.value;
+  return `${g("year")}-${g("month")}-${g("day")}T${g("hour").replace("24", "00")}:${g("minute")}`;
+}
+
+// valor del <input datetime-local> (hora de pared de Perú) -> ISO UTC correcto
+function inputToISO(local: string): string {
+  const withSeconds = local.length === 16 ? `${local}:00` : local;
+  return new Date(`${withSeconds}${PERU_OFFSET}`).toISOString();
 }
 
 function nowLocalInput(): string {
@@ -26,6 +41,7 @@ function nowLocalInput(): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("es-PE", {
+    timeZone: PERU_TZ,
     day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
   });
 }
@@ -218,6 +234,12 @@ function PromoModal({
       <form
         action={(fd) => {
           startTransition(async () => {
+            // datetime-local entrega hora de pared sin zona; la interpretamos
+            // como hora de Perú (UTC-5) para que el instante UTC sea correcto.
+            for (const key of ["startsAt", "endsAt"]) {
+              const v = (fd.get(key) as string | null)?.trim();
+              if (v) fd.set(key, inputToISO(v));
+            }
             const res = await action(null, fd);
             if (res && "error" in res && res.error) { setError(res.error); return; }
             setError(null);

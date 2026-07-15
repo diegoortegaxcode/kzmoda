@@ -16,7 +16,6 @@ function round2(n: number) {
 // Perú usa UTC-5 fijo todo el año (sin horario de verano). Fijamos la zona
 // para que las horas no dependan del navegador de quien las cargue o vea.
 const PERU_TZ = "America/Lima";
-const PERU_OFFSET = "-05:00";
 
 // ISO (UTC) -> valor "YYYY-MM-DDTHH:mm" en hora de Perú para <input datetime-local>
 function toLocalInput(iso: string): string {
@@ -27,12 +26,6 @@ function toLocalInput(iso: string): string {
   }).formatToParts(new Date(iso));
   const g = (t: string) => parts.find((p) => p.type === t)!.value;
   return `${g("year")}-${g("month")}-${g("day")}T${g("hour").replace("24", "00")}:${g("minute")}`;
-}
-
-// valor del <input datetime-local> (hora de pared de Perú) -> ISO UTC correcto
-function inputToISO(local: string): string {
-  const withSeconds = local.length === 16 ? `${local}:00` : local;
-  return new Date(`${withSeconds}${PERU_OFFSET}`).toISOString();
 }
 
 function nowLocalInput(): string {
@@ -234,12 +227,8 @@ function PromoModal({
       <form
         action={(fd) => {
           startTransition(async () => {
-            // datetime-local entrega hora de pared sin zona; la interpretamos
-            // como hora de Perú (UTC-5) para que el instante UTC sea correcto.
-            for (const key of ["startsAt", "endsAt"]) {
-              const v = (fd.get(key) as string | null)?.trim();
-              if (v) fd.set(key, inputToISO(v));
-            }
+            // El servidor interpreta la hora de pared como Perú (UTC-5). No
+            // convertimos aquí para no depender de la zona del navegador.
             const res = await action(null, fd);
             if (res && "error" in res && res.error) { setError(res.error); return; }
             setError(null);

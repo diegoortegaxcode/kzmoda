@@ -32,6 +32,16 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+// Interpreta el valor de <input datetime-local> como hora de Perú (UTC-5 fijo,
+// sin horario de verano). Independiente de la zona del servidor/navegador.
+// Acepta también un ISO ya normalizado (con Z u offset) por compatibilidad.
+function parsePeruDate(raw: string): Date {
+  const hasZone = /[zZ]$|[+-]\d\d:?\d\d$/.test(raw);
+  if (hasZone) return new Date(raw);
+  const withSeconds = raw.length === 16 ? `${raw}:00` : raw;
+  return new Date(`${withSeconds}-05:00`);
+}
+
 export async function getPromotions(): Promise<PromotionRow[]> {
   const now = new Date();
   const rows = await db.promotion.findMany({
@@ -83,8 +93,8 @@ function parsePromoForm(formData: FormData) {
     return { error: "El descuento debe estar entre 1% y 99%" as const };
   if (!endsAtRaw) return { error: "Indica la fecha de fin de la promoción" as const };
 
-  const startsAt = startsAtRaw ? new Date(startsAtRaw) : new Date();
-  const endsAt = new Date(endsAtRaw);
+  const startsAt = startsAtRaw ? parsePeruDate(startsAtRaw) : new Date();
+  const endsAt = parsePeruDate(endsAtRaw);
   if (isNaN(endsAt.getTime())) return { error: "Fecha de fin inválida" as const };
   if (endsAt <= startsAt) return { error: "La fecha de fin debe ser posterior al inicio" as const };
 

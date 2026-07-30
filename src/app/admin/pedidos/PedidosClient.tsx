@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Package, Search } from "lucide-react";
 import clsx from "clsx";
 import OrderStatusSelect from "./OrderStatusSelect";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 type OrderStatus = "PENDIENTE" | "EN_PROCESO" | "EN_DESPACHO" | "COMPLETADO" | "CANCELADO";
 
@@ -43,6 +44,8 @@ export default function PedidosClient({ orders }: { orders: OrderListItem[] }) {
     const matchStatus = statusFilter === "TODOS" || o.status === statusFilter;
     return matchQuery && matchStatus;
   });
+
+  const { page, setPage, pageCount, pageItems, from, to } = usePagination(filtered, 10);
 
   return (
     <div className="space-y-4">
@@ -83,7 +86,7 @@ export default function PedidosClient({ orders }: { orders: OrderListItem[] }) {
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
           <div className="divide-y divide-slate-100">
-            {filtered.map((order) => {
+            {pageItems.map((order) => {
               const debt = order.debt;
               const debtPct = debt
                 ? Math.min(100, (debt.amountPaid / debt.amount) * 100)
@@ -152,6 +155,15 @@ export default function PedidosClient({ orders }: { orders: OrderListItem[] }) {
               );
             })}
           </div>
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            from={from}
+            to={to}
+            total={filtered.length}
+            label="pedidos"
+          />
         </div>
       )}
     </div>

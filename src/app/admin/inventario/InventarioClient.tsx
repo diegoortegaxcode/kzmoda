@@ -5,15 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Package, AlertTriangle, TrendingUp, X, ArrowDownCircle,
   ArrowUpCircle, SlidersHorizontal, DollarSign, Boxes, FileDown, Loader2, Tag,
-  ImagePlus, Link as LinkIcon, Pencil, Search, Camera, Clock, Printer,
+  ImagePlus, Link as LinkIcon, Pencil, Search, Camera, Clock, Printer, Trash2,
 } from "lucide-react";
 import {
   createProductAction, adjustStockAction, createCategoryAction, toggleCategoryAction, updateProductAction,
-  getNextSkuSuggestion,
+  deleteProductAction, getNextSkuSuggestion,
   type ProductRow, type CategoryOption, type CategoryRow, type ActionResult,
 } from "./actions";
 import RichTextEditor from "./RichTextEditor";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1014,6 +1015,7 @@ export default function InventarioClient({
   const [adjusting, setAdjusting] = useState<ProductRow | null>(null);
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const [stockFilter, setStockFilter] = useState<"ALL" | "OUT" | "LOW" | "OK">(
     ((searchParams.get("stock") as "ALL" | "OUT" | "LOW" | "OK") ?? "ALL")
@@ -1050,6 +1052,18 @@ export default function InventarioClient({
     } finally {
       setDownloading(false);
     }
+  }
+
+  async function handleDelete(p: ProductRow) {
+    if (!confirm(`¿Eliminar "${p.name}"? Esta acción no se puede deshacer.`)) return;
+    setDeletingId(p.id);
+    const res = await deleteProductAction(p.id);
+    setDeletingId(null);
+    if (res?.error) {
+      alert(res.error);
+      return;
+    }
+    router.refresh();
   }
 
   const recentProducts = [...products].sort(
@@ -1124,6 +1138,8 @@ export default function InventarioClient({
             : p.stock > p.minStock;
     return searchOk && stockOk;
   });
+
+  const { page, setPage, pageCount, pageItems, from, to } = usePagination(filteredProducts, 10);
 
   return (
     <>
@@ -1265,7 +1281,7 @@ export default function InventarioClient({
                     </td>
                   </tr>
                 )}
-                {filteredProducts.map((p) => {
+                {pageItems.map((p) => {
                   const chip = stockChip(p.stock, p.minStock);
                   const mgn = margin(p.price, p.costPrice);
                   const isStoreVisible = p.active && p.stock > 0;
@@ -1333,7 +1349,7 @@ export default function InventarioClient({
                       </td>
                       {/* Actions */}
                       <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2">
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -1352,6 +1368,18 @@ export default function InventarioClient({
                             <SlidersHorizontal size={12} strokeWidth={2.5} />
                             Ajuste
                           </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDelete(p)}
+                            disabled={deletingId === p.id}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                          >
+                            {deletingId === p.id
+                              ? <Loader2 size={12} strokeWidth={2.5} className="animate-spin" />
+                              : <Trash2 size={12} strokeWidth={2.5} />}
+                            Eliminar
+                          </motion.button>
                         </div>
                       </td>
                     </motion.tr>
@@ -1360,6 +1388,15 @@ export default function InventarioClient({
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            from={from}
+            to={to}
+            total={filteredProducts.length}
+            label="productos"
+          />
         </div>
 
         {/* Margin legend */}

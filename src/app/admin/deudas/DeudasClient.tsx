@@ -6,6 +6,7 @@ import { X, Banknote, Search } from "lucide-react";
 import DebtPanel from "@/components/DebtPanel";
 import type { DebtPanelRow } from "@/components/DebtPanel";
 import { registerPaymentAction, type DebtDetail, type ActionResult } from "./actions";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 const PAYMENT_TYPES = [
   { value: "EFECTIVO", label: "Efectivo" },
@@ -192,6 +193,8 @@ export default function DeudasClient({
     ? rows.filter((r) => r.customer.toLowerCase().includes(query.toLowerCase()))
     : rows;
 
+  const { page, setPage, pageCount, pageItems, from, to } = usePagination(filteredRows, 10);
+
   function handlePagar(debt: DebtPanelRow) {
     const detail = rows.find((r) => r.id === debt.id);
     if (detail) setPaying(detail);
@@ -228,7 +231,19 @@ export default function DeudasClient({
           </div>
         )}
 
-        <DebtPanel debts={filteredRows} onPagar={handlePagar} />
+        <DebtPanel debts={pageItems} onPagar={handlePagar} />
+
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            from={from}
+            to={to}
+            total={filteredRows.length}
+            label="deudas"
+          />
+        </div>
       </main>
 
       <AnimatePresence>

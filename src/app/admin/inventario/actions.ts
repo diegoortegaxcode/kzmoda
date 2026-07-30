@@ -291,3 +291,28 @@ export async function updateProductAction(
     return { error: "Error al actualizar el producto." };
   }
 }
+
+export async function deleteProductAction(productId: string): Promise<ActionResult> {
+  const id = (productId || "").trim();
+  if (!id) return { error: "Producto inválido." };
+
+  try {
+    // No permitir eliminar productos que ya aparecen en pedidos: se perdería el historial de ventas.
+    const orderItemsCount = await db.orderItem.count({ where: { productId: id } });
+    if (orderItemsCount > 0) {
+      return { error: "No se puede eliminar: el producto tiene pedidos asociados. Desactívalo en su lugar." };
+    }
+
+    await db.$transaction([
+      db.stockMovement.deleteMany({ where: { productId: id } }),
+      db.promotion.deleteMany({ where: { productId: id } }),
+      db.product.delete({ where: { id } }),
+    ]);
+
+    revalidatePath("/admin/inventario");
+    revalidatePath("/");
+    return { success: true };
+  } catch {
+    return { error: "Error al eliminar el producto." };
+  }
+}

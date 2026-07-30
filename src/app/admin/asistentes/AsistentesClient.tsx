@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, UserCheck, UserX, Shield, User, Loader2 } from "lucide-react";
 import clsx from "clsx";
 import { createUserAction, toggleUserAction, type UserRow, type ActionResult } from "./actions";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 function RoleBadge({ role }: { role: "ADMIN" | "ASISTENTE" }) {
   return (
@@ -176,6 +177,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
 
 export default function AsistentesClient({ users }: { users: UserRow[] }) {
   const [showModal, setShowModal] = useState(false);
+  const { page, setPage, pageCount, pageItems, from, to } = usePagination(users, 10);
 
   return (
     <>
@@ -209,7 +211,7 @@ export default function AsistentesClient({ users }: { users: UserRow[] }) {
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {users.map((user, i) => (
+              {pageItems.map((user, i) => (
                 <motion.div
                   key={user.id}
                   initial={{ opacity: 0, x: -8 }}
@@ -248,6 +250,15 @@ export default function AsistentesClient({ users }: { users: UserRow[] }) {
                   <ToggleButton user={user} />
                 </motion.div>
               ))}
+              <Pagination
+                page={page}
+                pageCount={pageCount}
+                onPageChange={setPage}
+                from={from}
+                to={to}
+                total={users.length}
+                label="usuarios"
+              />
             </div>
           )}
         </motion.div>

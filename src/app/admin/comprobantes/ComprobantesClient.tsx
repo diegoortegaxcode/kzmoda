@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, XCircle, ExternalLink, Loader2, FileCheck, Clock, Search } from "lucide-react";
 import { approveProofAction, rejectProofAction, type ProofRow, type ActionResult } from "./actions";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 const PAYMENT_LABEL: Record<string, string> = {
   EFECTIVO: "Efectivo",
@@ -216,6 +217,11 @@ export default function ComprobantesClient({ proofs: initial }: { proofs: ProofR
   const pending = filtered.filter((proof) => proof.status === "PENDIENTE");
   const history = filtered.filter((proof) => proof.status !== "PENDIENTE");
 
+  const {
+    page: histPage, setPage: setHistPage, pageCount: histPageCount,
+    pageItems: histItems, from: histFrom, to: histTo,
+  } = usePagination(history, 10);
+
   if (proofs.length === 0) {
     return (
       <div className="text-center py-20 text-slate-400">
@@ -314,7 +320,7 @@ export default function ComprobantesClient({ proofs: initial }: { proofs: ProofR
         ) : (
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <div className="divide-y divide-slate-100">
-              {history.slice(0, 30).map((proof) => (
+              {histItems.map((proof) => (
                 <div key={proof.id} className="px-4 py-3 flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-900 truncate">{proof.customerName}</p>
@@ -352,6 +358,15 @@ export default function ComprobantesClient({ proofs: initial }: { proofs: ProofR
                 </div>
               ))}
             </div>
+            <Pagination
+              page={histPage}
+              pageCount={histPageCount}
+              onPageChange={setHistPage}
+              from={histFrom}
+              to={histTo}
+              total={history.length}
+              label="comprobantes"
+            />
           </div>
         )}
       </div>

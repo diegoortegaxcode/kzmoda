@@ -8,6 +8,7 @@ import {
   createBannerAction, updateBannerAction, toggleBannerAction, deleteBannerAction,
   type BannerRow,
 } from "./actions";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 // ── shared modal shell ────────────────────────────────────────────────────────
 function ModalShell({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
@@ -228,6 +229,8 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
     startTransition(() => deleteBannerAction(id));
   }
 
+  const { page, setPage, pageCount, pageItems, from, to } = usePagination(banners, 10);
+
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
@@ -273,12 +276,14 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
         </div>
       ) : (
         <div className="space-y-3">
-          {banners.map((banner, i) => (
+          {pageItems.map((banner) => {
+            const i = banners.indexOf(banner);
+            return (
             <motion.div
               key={banner.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ delay: 0.02 }}
               className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
             >
               <div className="flex flex-col sm:flex-row sm:items-stretch">
@@ -362,7 +367,19 @@ export default function BannersClient({ banners: initial }: { banners: BannerRow
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <Pagination
+              page={page}
+              pageCount={pageCount}
+              onPageChange={setPage}
+              from={from}
+              to={to}
+              total={banners.length}
+              label="banners"
+            />
+          </div>
         </div>
       )}
 

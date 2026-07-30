@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, UserPlus, Mail, Phone, CreditCard, X, Users, ShieldCheck, ShieldOff, Search } from "lucide-react";
 import { createCustomerAction, toggleCustomerAction, type CustomerRow, type ActionResult } from "./actions";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 function CustomerModal({ onClose }: { onClose: () => void }) {
   const [state, formAction, pending] = useActionState<ActionResult, FormData>(createCustomerAction, null);
@@ -124,6 +125,8 @@ export default function ClientesClient({ customers }: { customers: CustomerRow[]
       )
     : customers;
 
+  const { page, setPage, pageCount, pageItems, from, to } = usePagination(filtered, 10);
+
   function handleToggle(id: string) {
     startTransition(() => toggleCustomerAction(id));
   }
@@ -198,7 +201,7 @@ export default function ClientesClient({ customers }: { customers: CustomerRow[]
                     </td>
                   </tr>
                 )}
-                {filtered.map((c, i) => (
+                {pageItems.map((c, i) => (
                   <motion.tr
                     key={c.id}
                     initial={{ opacity: 0 }}
@@ -267,6 +270,15 @@ export default function ClientesClient({ customers }: { customers: CustomerRow[]
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            from={from}
+            to={to}
+            total={filtered.length}
+            label="clientes"
+          />
         </div>
       </main>
 

@@ -7,6 +7,7 @@ import {
   createPromotionAction, updatePromotionAction, togglePromotionAction, deletePromotionAction,
   type PromotionRow, type ProductOption,
 } from "./actions";
+import { Pagination, usePagination } from "@/components/Pagination";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function round2(n: number) {
@@ -284,6 +285,8 @@ export default function PromocionesClient({
 
   const liveCount = promotions.filter((p) => statusOf(p).label === "En vivo").length;
 
+  const { page, setPage, pageCount, pageItems, from, to } = usePagination(promotions, 10);
+
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
@@ -332,7 +335,7 @@ export default function PromocionesClient({
         </div>
       ) : (
         <div className="space-y-3">
-          {promotions.map((promo, i) => {
+          {pageItems.map((promo, i) => {
             const status = statusOf(promo);
             return (
               <motion.div
@@ -407,6 +410,17 @@ export default function PromocionesClient({
               </motion.div>
             );
           })}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <Pagination
+              page={page}
+              pageCount={pageCount}
+              onPageChange={setPage}
+              from={from}
+              to={to}
+              total={promotions.length}
+              label="promociones"
+            />
+          </div>
         </div>
       )}
     </div>

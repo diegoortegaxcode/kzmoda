@@ -210,7 +210,7 @@ export async function GET() {
       create: { id: "singleton" },
     }),
     db.product.findMany({
-      where: { active: true },
+      where: { active: true, stock: { gt: 0 } },
       include: { category: { select: { name: true } } },
       orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
     }),
